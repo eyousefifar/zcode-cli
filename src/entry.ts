@@ -20,12 +20,26 @@
 //    replayed in-process via a data: import.
 
 import { existsSync } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, userInfo } from "node:os";
 import { join } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 import builtinProviderConfig from "../vendor/zcode-builtin.json" with { type: "file" };
+import defaultCliSettings from "../vendor/cli-settings-default.json" with { type: "file" };
 
 const BUNFS = "/$bunfs/root/";
+
+// The runtime keys parts of the provider/credential layer on the unix
+// username; under `env -i`-style minimal environments USER is absent and
+// model resolution fails with "Select a model before continuing".
+if (!process.env.USER) {
+  try {
+    process.env.USER = userInfo().username;
+    process.env.LOGNAME ??= process.env.USER;
+  } catch {
+    // no passwd entry — leave unset, nothing more we can do
+  }
+}
 
 // Keep standalone state (~/.zcode-standalone/.zcode/v2) separate from the
 // desktop app's store (~/.zcode/v2): the CLI's login writes account state in
@@ -34,6 +48,25 @@ const BUNFS = "/$bunfs/root/";
 if (!process.env.ZCODE_DATA_BASE_DIR) {
   process.env.ZCODE_DATA_BASE_DIR = join(homedir(), ".zcode-standalone");
 }
+
+// Mirror upstream's `ensureCliSettings`: the runtime expects
+// <data-dir>/.zcode/cli/setting.json to exist (e.g. the TUI reads ui.locale
+// on submit). Create it from the shipped defaults when absent.
+try {
+  const cliDir = join(process.env.ZCODE_DATA_BASE_DIR, ".zcode", "cli");
+  const cliSettingsPath = join(cliDir, "setting.json");
+  if (!existsSync(cliSettingsPath)) {
+    mkdirSync(cliDir, { recursive: true, mode: 0o700 });
+    writeFileSync(cliSettingsPath, readFileSync(defaultCliSettings), { mode: 0o600 });
+  }
+} catch {
+  // best effort — the runtime tolerates a missing file except for some
+  // TUI code paths.
+}
+
+// The vendored TUI (kingsword09/zcode-cli) checks npm for zcode-app-cli
+// updates; this distribution isn't that package, so default the check off.
+process.env.ZCODE_DISABLE_UPDATE_CHECK ??= "1";
 
 // Self-respawn normalization: <binary> <bunfs-entry> __zcode-plugin-host ...
 if (process.argv[2]?.startsWith(BUNFS)) {

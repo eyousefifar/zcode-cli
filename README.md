@@ -54,13 +54,18 @@ bash scripts/test.sh dist/zcode
 ## First run
 
 ```bash
-zcode login          # opens Z.ai OAuth (or --no-browser to print the URL)
+zcode login          # opens Z.AI OAuth (or --no-browser to print the URL)
 zcode doctor
 zcode -p "Reply with exactly: ok"
 ```
 
 State lives in `~/.zcode-standalone/.zcode/v2/` — the desktop app's login is
 not shared or touched.
+
+> **Stability tip:** OAuth tokens rotate whenever the desktop app is running,
+> which invalidates the CLI's copy. For unattended/headless use, configure the
+> coding-plan **API key** instead — see
+> [docs/TESTING.md](docs/TESTING.md) "Model selection notes".
 
 ## Usage
 
@@ -98,10 +103,19 @@ The bundle itself is unmodified.
 
 ## Known limitations
 
-- No interactive TUI (`@zcode/tui` is not shipped by the desktop app either).
+- Interactive TUI is **experimental**: bundled from kingsword09's
+  [`@zcode/tui`](https://github.com/kingsword09/zcode-cli) (MIT). It boots,
+  renders and accepts input; if chat submission misbehaves, headless mode
+  (`zcode -p`) is the supported path.
 - Some flags in upstream `--help` are not actually parsed (`--allowed-tools`,
   `--max-turns`, ...). See [docs/OPTIONS.md](docs/OPTIONS.md).
 - Browser Use backend needs `playwright-core`, which is stubbed out.
+
+## Credits
+
+- [kingsword09/zcode-cli](https://github.com/kingsword09/zcode-cli) — the
+  interactive TUI (`@zcode/tui`) is their MIT-licensed work; their project is
+  also a full-featured npm-distributed alternative with a Node launcher.
 
 ## Versioning
 

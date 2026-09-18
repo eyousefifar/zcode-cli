@@ -1,17 +1,24 @@
-LICENSE NOTE
-============
-
-This repository contains two kinds of code with different terms:
+This repository contains three kinds of code with different terms:
 
 1. `vendor/zcode.cjs` and `vendor/zcode-builtin.json`
-   Proprietary software of Z.ai (https://z.ai), redistributed here
-   **unmodified** from the ZCode desktop application
-   (/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs, version 0.16.5).
-   All rights remain with Z.ai. This packaging is an unofficial,
+   Proprietary software of Z.ai (https://z.ai), redistributed here from the
+   ZCode desktop application
+   (/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs, version 0.16.5)
+   with **two minimal defensive patches**: four property reads in the TUI
+   turn-metadata formatter (`e.locale`/`e.mode`/`e.model`/`e.theme`/
+   `e.thoughtLevel`) use optional chaining, because the bundled third-party
+   TUI triggers them with an undefined payload on this runtime build. The
+   patch is visible in git history; all other code is byte-identical to the
+   app bundle. All rights remain with Z.ai. This packaging is an unofficial,
    non-affiliated interoperability effort; if you are Z.ai and object to this
    redistribution, open an issue and it will be taken down.
 
-2. Everything else (src/, scripts/, build.ts, stubs/, docs/, workflows)
+2. `vendor/zcode-tui-index.js` (+ `vendor/zcode-tui-LICENSE`)
+   The interactive TUI, built from kingsword09/zcode-cli
+   (https://github.com/kingsword09/zcode-cli), MIT licensed. Unmodified
+   build artifact of their `packages/zcode-tui` package.
+
+3. Everything else (src/, scripts/, build.ts, stubs/, docs/, workflows)
    Written for this repository and provided under the MIT License:
 
    MIT License

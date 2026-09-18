@@ -34,5 +34,8 @@
     "agent",
     "coding-assistant"
   ],
-  "author": "Erfan Yousefifar"
+  "author": "Erfan Yousefifar",
+  "devDependencies": {
+    "@earendil-works/pi-tui": "0.85.1"
+  }
 }
