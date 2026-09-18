@@ -1,0 +1,7 @@
+{
+  "name": "@zcode/tui",
+  "version": "0.0.0-stub",
+  "description": "Stub replacing the @zcode/tui package (not shipped with the desktop app's CLI bundle).",
+  "main": "index.js",
+  "private": true
+}

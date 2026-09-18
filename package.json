@@ -1,0 +1,38 @@
+{
+  "name": "@eyousefifar/zcode-cli",
+  "version": "0.16.5",
+  "description": "Unofficial standalone distribution of the ZCode CLI (the agent engine from the ZCode desktop app) — single binary via bun compile, or a thin npm package for node/bun.",
+  "license": "UNLICENSED",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "zcode": "./src/bin.js"
+  },
+  "files": [
+    "src/",
+    "vendor/",
+    "README.md",
+    "LICENSE-NOTE"
+  ],
+  "engines": {
+    "node": ">=22.5",
+    "bun": ">=1.1.21"
+  },
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "test": "bash scripts/test.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eyousefifar/zcode-cli.git"
+  },
+  "keywords": [
+    "zcode",
+    "zai",
+    "glm",
+    "cli",
+    "agent",
+    "coding-assistant"
+  ],
+  "author": "Erfan Yousefifar"
+}

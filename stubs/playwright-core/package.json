@@ -1,0 +1,7 @@
+{
+  "name": "playwright-core",
+  "version": "0.0.0-stub",
+  "description": "Stub replacing playwright-core for standalone builds without a Browser Use backend.",
+  "main": "index.js",
+  "private": true
+}
