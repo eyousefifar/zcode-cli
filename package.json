@@ -36,6 +36,8 @@
   ],
   "author": "Erfan Yousefifar",
   "devDependencies": {
-    "@earendil-works/pi-tui": "0.85.1"
+    "@earendil-works/pi-tui": "0.85.1",
+    "@zcode/tui": "file:./stubs/@zcode/tui-real",
+    "playwright-core": "file:./stubs/playwright-core"
   }
 }
