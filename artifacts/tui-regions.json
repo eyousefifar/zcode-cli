@@ -1,0 +1,2228 @@
+[
+  {
+    "name": "setting.example.json",
+    "start": 13,
+    "end": 88,
+    "lines": 76,
+    "depth": 1
+  },
+  {
+    "name": "src/config-paths.ts",
+    "start": 90,
+    "end": 123,
+    "lines": 34,
+    "depth": 1
+  },
+  {
+    "name": "src/model-access.ts",
+    "start": 125,
+    "end": 332,
+    "lines": 208,
+    "depth": 1
+  },
+  {
+    "name": "src/prompt-preflight.ts",
+    "start": 334,
+    "end": 382,
+    "lines": 49,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/prompt-preflight.ts",
+    "start": 384,
+    "end": 397,
+    "lines": 14,
+    "depth": 1
+  },
+  {
+    "name": "scripts/release-version.ts",
+    "start": 399,
+    "end": 524,
+    "lines": 126,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/types.ts",
+    "start": 526,
+    "end": 532,
+    "lines": 7,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/attachments.ts",
+    "start": 534,
+    "end": 565,
+    "lines": 32,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/attachment-bar.ts",
+    "start": 567,
+    "end": 94555,
+    "lines": 93989,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/core.js",
+    "start": 94557,
+    "end": 96324,
+    "lines": 1768,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/1c.js",
+    "start": 96326,
+    "end": 96426,
+    "lines": 101,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/abnf.js",
+    "start": 96428,
+    "end": 96512,
+    "lines": 85,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/accesslog.js",
+    "start": 96514,
+    "end": 96615,
+    "lines": 102,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/actionscript.js",
+    "start": 96617,
+    "end": 96710,
+    "lines": 94,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ada.js",
+    "start": 96712,
+    "end": 96822,
+    "lines": 111,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/angelscript.js",
+    "start": 96824,
+    "end": 96918,
+    "lines": 95,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/apache.js",
+    "start": 96920,
+    "end": 96987,
+    "lines": 68,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/applescript.js",
+    "start": 96989,
+    "end": 97117,
+    "lines": 129,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/arcade.js",
+    "start": 97119,
+    "end": 97240,
+    "lines": 122,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/arduino.js",
+    "start": 97242,
+    "end": 97625,
+    "lines": 384,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/armasm.js",
+    "start": 97627,
+    "end": 97692,
+    "lines": 66,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/xml.js",
+    "start": 97694,
+    "end": 97908,
+    "lines": 215,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/asciidoc.js",
+    "start": 97910,
+    "end": 98110,
+    "lines": 201,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/aspectj.js",
+    "start": 98112,
+    "end": 98252,
+    "lines": 141,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/autohotkey.js",
+    "start": 98254,
+    "end": 98308,
+    "lines": 55,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/autoit.js",
+    "start": 98310,
+    "end": 98443,
+    "lines": 134,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/avrasm.js",
+    "start": 98445,
+    "end": 98491,
+    "lines": 47,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/awk.js",
+    "start": 98493,
+    "end": 98551,
+    "lines": 59,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/axapta.js",
+    "start": 98553,
+    "end": 98712,
+    "lines": 160,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/bash.js",
+    "start": 98714,
+    "end": 98842,
+    "lines": 129,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/basic.js",
+    "start": 98844,
+    "end": 98882,
+    "lines": 39,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/bnf.js",
+    "start": 98884,
+    "end": 98911,
+    "lines": 28,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/brainfuck.js",
+    "start": 98913,
+    "end": 98949,
+    "lines": 37,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/c-like.js",
+    "start": 98951,
+    "end": 99334,
+    "lines": 384,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/c.js",
+    "start": 99336,
+    "end": 99554,
+    "lines": 219,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/cal.js",
+    "start": 99556,
+    "end": 99626,
+    "lines": 71,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/capnproto.js",
+    "start": 99628,
+    "end": 99677,
+    "lines": 50,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ceylon.js",
+    "start": 99679,
+    "end": 99737,
+    "lines": 59,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/clean.js",
+    "start": 99739,
+    "end": 99762,
+    "lines": 24,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/clojure.js",
+    "start": 99764,
+    "end": 99869,
+    "lines": 106,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/clojure-repl.js",
+    "start": 99871,
+    "end": 99888,
+    "lines": 18,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/cmake.js",
+    "start": 99890,
+    "end": 99912,
+    "lines": 23,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/coffeescript.js",
+    "start": 99914,
+    "end": 100205,
+    "lines": 292,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/coq.js",
+    "start": 100207,
+    "end": 100232,
+    "lines": 26,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/cos.js",
+    "start": 100234,
+    "end": 100311,
+    "lines": 78,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/cpp.js",
+    "start": 100313,
+    "end": 100677,
+    "lines": 365,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/crmsh.js",
+    "start": 100679,
+    "end": 100759,
+    "lines": 81,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/crystal.js",
+    "start": 100761,
+    "end": 101015,
+    "lines": 255,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/csharp.js",
+    "start": 101017,
+    "end": 101378,
+    "lines": 362,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/csp.js",
+    "start": 101380,
+    "end": 101404,
+    "lines": 25,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/css.js",
+    "start": 101406,
+    "end": 101948,
+    "lines": 543,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/d.js",
+    "start": 101950,
+    "end": 102133,
+    "lines": 184,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/markdown.js",
+    "start": 102135,
+    "end": 102335,
+    "lines": 201,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/dart.js",
+    "start": 102337,
+    "end": 102491,
+    "lines": 155,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/delphi.js",
+    "start": 102493,
+    "end": 102585,
+    "lines": 93,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/diff.js",
+    "start": 102587,
+    "end": 102657,
+    "lines": 71,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/django.js",
+    "start": 102659,
+    "end": 102702,
+    "lines": 44,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/dns.js",
+    "start": 102704,
+    "end": 102731,
+    "lines": 28,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/dockerfile.js",
+    "start": 102733,
+    "end": 102759,
+    "lines": 27,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/dos.js",
+    "start": 102761,
+    "end": 102800,
+    "lines": 40,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/dsconfig.js",
+    "start": 102802,
+    "end": 102857,
+    "lines": 56,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/dts.js",
+    "start": 102859,
+    "end": 102974,
+    "lines": 116,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/dust.js",
+    "start": 102976,
+    "end": 103009,
+    "lines": 34,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ebnf.js",
+    "start": 103011,
+    "end": 103051,
+    "lines": 41,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/elixir.js",
+    "start": 103053,
+    "end": 103270,
+    "lines": 218,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/elm.js",
+    "start": 103272,
+    "end": 103353,
+    "lines": 82,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ruby.js",
+    "start": 103355,
+    "end": 103611,
+    "lines": 257,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/erb.js",
+    "start": 103613,
+    "end": 103630,
+    "lines": 18,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/erlang-repl.js",
+    "start": 103632,
+    "end": 103692,
+    "lines": 61,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/erlang.js",
+    "start": 103694,
+    "end": 103858,
+    "lines": 165,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/excel.js",
+    "start": 103860,
+    "end": 103908,
+    "lines": 49,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/fix.js",
+    "start": 103910,
+    "end": 103940,
+    "lines": 31,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/flix.js",
+    "start": 103942,
+    "end": 103982,
+    "lines": 41,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/fortran.js",
+    "start": 103984,
+    "end": 104062,
+    "lines": 79,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/fsharp.js",
+    "start": 104064,
+    "end": 104120,
+    "lines": 57,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/gams.js",
+    "start": 104122,
+    "end": 104282,
+    "lines": 161,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/gauss.js",
+    "start": 104284,
+    "end": 104451,
+    "lines": 168,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/gcode.js",
+    "start": 104453,
+    "end": 104518,
+    "lines": 66,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/gherkin.js",
+    "start": 104520,
+    "end": 104561,
+    "lines": 42,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/glsl.js",
+    "start": 104563,
+    "end": 104588,
+    "lines": 26,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/gml.js",
+    "start": 104590,
+    "end": 104612,
+    "lines": 23,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/go.js",
+    "start": 104614,
+    "end": 104666,
+    "lines": 53,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/golo.js",
+    "start": 104668,
+    "end": 104689,
+    "lines": 22,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/gradle.js",
+    "start": 104691,
+    "end": 104709,
+    "lines": 19,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/groovy.js",
+    "start": 104711,
+    "end": 104839,
+    "lines": 129,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/haml.js",
+    "start": 104841,
+    "end": 104937,
+    "lines": 97,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/handlebars.js",
+    "start": 104939,
+    "end": 105170,
+    "lines": 232,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/haskell.js",
+    "start": 105172,
+    "end": 105295,
+    "lines": 124,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/haxe.js",
+    "start": 105297,
+    "end": 105430,
+    "lines": 134,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/hsp.js",
+    "start": 105432,
+    "end": 105477,
+    "lines": 46,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/htmlbars.js",
+    "start": 105479,
+    "end": 105716,
+    "lines": 238,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/http.js",
+    "start": 105718,
+    "end": 105814,
+    "lines": 97,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/hy.js",
+    "start": 105816,
+    "end": 105907,
+    "lines": 92,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/inform7.js",
+    "start": 105909,
+    "end": 105954,
+    "lines": 46,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ini.js",
+    "start": 105956,
+    "end": 106086,
+    "lines": 131,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/irpf90.js",
+    "start": 106088,
+    "end": 106159,
+    "lines": 72,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/isbl.js",
+    "start": 106161,
+    "end": 106273,
+    "lines": 113,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/java.js",
+    "start": 106275,
+    "end": 106413,
+    "lines": 139,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/javascript.js",
+    "start": 106415,
+    "end": 106880,
+    "lines": 466,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/jboss-cli.js",
+    "start": 106882,
+    "end": 106928,
+    "lines": 47,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/json.js",
+    "start": 106930,
+    "end": 106973,
+    "lines": 44,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/julia.js",
+    "start": 106975,
+    "end": 107328,
+    "lines": 354,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/julia-repl.js",
+    "start": 107330,
+    "end": 107348,
+    "lines": 19,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/kotlin.js",
+    "start": 107350,
+    "end": 107561,
+    "lines": 212,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/lasso.js",
+    "start": 107563,
+    "end": 107689,
+    "lines": 127,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/latex.js",
+    "start": 107691,
+    "end": 107920,
+    "lines": 230,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ldif.js",
+    "start": 107922,
+    "end": 107959,
+    "lines": 38,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/leaf.js",
+    "start": 107961,
+    "end": 108000,
+    "lines": 40,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/less.js",
+    "start": 108002,
+    "end": 108573,
+    "lines": 572,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/lisp.js",
+    "start": 108575,
+    "end": 108694,
+    "lines": 120,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/livecodeserver.js",
+    "start": 108696,
+    "end": 108782,
+    "lines": 87,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/livescript.js",
+    "start": 108784,
+    "end": 109092,
+    "lines": 309,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/llvm.js",
+    "start": 109094,
+    "end": 109186,
+    "lines": 93,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/lsl.js",
+    "start": 109188,
+    "end": 109243,
+    "lines": 56,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/lua.js",
+    "start": 109245,
+    "end": 109293,
+    "lines": 49,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/makefile.js",
+    "start": 109295,
+    "end": 109357,
+    "lines": 63,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/mathematica.js",
+    "start": 109359,
+    "end": 116101,
+    "lines": 6743,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/matlab.js",
+    "start": 116103,
+    "end": 116174,
+    "lines": 72,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/maxima.js",
+    "start": 116176,
+    "end": 116214,
+    "lines": 39,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/mel.js",
+    "start": 116216,
+    "end": 116240,
+    "lines": 25,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/mercury.js",
+    "start": 116242,
+    "end": 116304,
+    "lines": 63,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/mipsasm.js",
+    "start": 116306,
+    "end": 116359,
+    "lines": 54,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/mizar.js",
+    "start": 116361,
+    "end": 116371,
+    "lines": 11,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/perl.js",
+    "start": 116373,
+    "end": 116826,
+    "lines": 454,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/mojolicious.js",
+    "start": 116828,
+    "end": 116855,
+    "lines": 28,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/monkey.js",
+    "start": 116857,
+    "end": 116915,
+    "lines": 59,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/moonscript.js",
+    "start": 116917,
+    "end": 117019,
+    "lines": 103,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/n1ql.js",
+    "start": 117021,
+    "end": 117063,
+    "lines": 43,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/nginx.js",
+    "start": 117065,
+    "end": 117168,
+    "lines": 104,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/nim.js",
+    "start": 117170,
+    "end": 117219,
+    "lines": 50,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/nix.js",
+    "start": 117221,
+    "end": 117271,
+    "lines": 51,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/node-repl.js",
+    "start": 117273,
+    "end": 117293,
+    "lines": 21,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/nsis.js",
+    "start": 117295,
+    "end": 117384,
+    "lines": 90,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/objectivec.js",
+    "start": 117386,
+    "end": 117468,
+    "lines": 83,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ocaml.js",
+    "start": 117470,
+    "end": 117522,
+    "lines": 53,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/openscad.js",
+    "start": 117524,
+    "end": 117590,
+    "lines": 67,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/oxygene.js",
+    "start": 117592,
+    "end": 117660,
+    "lines": 69,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/parser3.js",
+    "start": 117662,
+    "end": 117702,
+    "lines": 41,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/pf.js",
+    "start": 117704,
+    "end": 117733,
+    "lines": 30,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/pgsql.js",
+    "start": 117735,
+    "end": 117930,
+    "lines": 196,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/php.js",
+    "start": 117932,
+    "end": 118096,
+    "lines": 165,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/php-template.js",
+    "start": 118098,
+    "end": 118141,
+    "lines": 44,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/plaintext.js",
+    "start": 118143,
+    "end": 118153,
+    "lines": 11,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/pony.js",
+    "start": 118155,
+    "end": 118215,
+    "lines": 61,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/powershell.js",
+    "start": 118217,
+    "end": 118421,
+    "lines": 205,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/processing.js",
+    "start": 118423,
+    "end": 118444,
+    "lines": 22,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/profile.js",
+    "start": 118446,
+    "end": 118484,
+    "lines": 39,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/prolog.js",
+    "start": 118486,
+    "end": 118548,
+    "lines": 63,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/properties.js",
+    "start": 118550,
+    "end": 118614,
+    "lines": 65,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/protobuf.js",
+    "start": 118616,
+    "end": 118653,
+    "lines": 38,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/puppet.js",
+    "start": 118655,
+    "end": 118740,
+    "lines": 86,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/purebasic.js",
+    "start": 118742,
+    "end": 118784,
+    "lines": 43,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/python.js",
+    "start": 118786,
+    "end": 119144,
+    "lines": 359,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/python-repl.js",
+    "start": 119146,
+    "end": 119165,
+    "lines": 20,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/q.js",
+    "start": 119167,
+    "end": 119188,
+    "lines": 22,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/qml.js",
+    "start": 119190,
+    "end": 119343,
+    "lines": 154,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/r.js",
+    "start": 119345,
+    "end": 119503,
+    "lines": 159,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/reasonml.js",
+    "start": 119505,
+    "end": 119749,
+    "lines": 245,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/rib.js",
+    "start": 119751,
+    "end": 119767,
+    "lines": 17,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/roboconf.js",
+    "start": 119769,
+    "end": 119822,
+    "lines": 54,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/routeros.js",
+    "start": 119824,
+    "end": 119933,
+    "lines": 110,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/rsl.js",
+    "start": 119935,
+    "end": 119969,
+    "lines": 35,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/ruleslanguage.js",
+    "start": 119971,
+    "end": 119997,
+    "lines": 27,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/rust.js",
+    "start": 119999,
+    "end": 120079,
+    "lines": 81,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/sas.js",
+    "start": 120081,
+    "end": 120127,
+    "lines": 47,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/scala.js",
+    "start": 120129,
+    "end": 120244,
+    "lines": 116,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/scheme.js",
+    "start": 120246,
+    "end": 120363,
+    "lines": 118,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/scilab.js",
+    "start": 120365,
+    "end": 120410,
+    "lines": 46,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/scss.js",
+    "start": 120412,
+    "end": 120927,
+    "lines": 516,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/shell.js",
+    "start": 120929,
+    "end": 120947,
+    "lines": 19,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/smali.js",
+    "start": 120949,
+    "end": 121062,
+    "lines": 114,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/smalltalk.js",
+    "start": 121064,
+    "end": 121115,
+    "lines": 52,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/sml.js",
+    "start": 121117,
+    "end": 121166,
+    "lines": 50,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/sqf.js",
+    "start": 121168,
+    "end": 121239,
+    "lines": 72,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/sql_more.js",
+    "start": 121241,
+    "end": 121293,
+    "lines": 53,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/sql.js",
+    "start": 121295,
+    "end": 121945,
+    "lines": 651,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/stan.js",
+    "start": 121947,
+    "end": 122457,
+    "lines": 511,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/stata.js",
+    "start": 122459,
+    "end": 122491,
+    "lines": 33,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/step21.js",
+    "start": 122493,
+    "end": 122542,
+    "lines": 50,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/stylus.js",
+    "start": 122544,
+    "end": 123090,
+    "lines": 547,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/subunit.js",
+    "start": 123092,
+    "end": 123126,
+    "lines": 35,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/swift.js",
+    "start": 123128,
+    "end": 123725,
+    "lines": 598,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/taggerscript.js",
+    "start": 123727,
+    "end": 123763,
+    "lines": 37,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/yaml.js",
+    "start": 123765,
+    "end": 123914,
+    "lines": 150,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/tap.js",
+    "start": 123916,
+    "end": 123946,
+    "lines": 31,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/tcl.js",
+    "start": 123948,
+    "end": 124020,
+    "lines": 73,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/thrift.js",
+    "start": 124022,
+    "end": 124058,
+    "lines": 37,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/tp.js",
+    "start": 124060,
+    "end": 124135,
+    "lines": 76,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/twig.js",
+    "start": 124137,
+    "end": 124197,
+    "lines": 61,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/typescript.js",
+    "start": 124199,
+    "end": 124736,
+    "lines": 538,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/vala.js",
+    "start": 124738,
+    "end": 124778,
+    "lines": 41,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/vbnet.js",
+    "start": 124780,
+    "end": 124895,
+    "lines": 116,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/vbscript.js",
+    "start": 124897,
+    "end": 124965,
+    "lines": 69,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/vbscript-html.js",
+    "start": 124967,
+    "end": 124981,
+    "lines": 15,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/verilog.js",
+    "start": 124983,
+    "end": 125034,
+    "lines": 52,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/vhdl.js",
+    "start": 125036,
+    "end": 125071,
+    "lines": 36,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/vim.js",
+    "start": 125073,
+    "end": 125120,
+    "lines": 48,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/x86asm.js",
+    "start": 125122,
+    "end": 125186,
+    "lines": 65,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/xl.js",
+    "start": 125188,
+    "end": 125252,
+    "lines": 65,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/xquery.js",
+    "start": 125254,
+    "end": 125377,
+    "lines": 124,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/languages/zephir.js",
+    "start": 125379,
+    "end": 125453,
+    "lines": 75,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/highlight.js/lib/index.js",
+    "start": 125455,
+    "end": 125650,
+    "lines": 196,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/common/unicode.js",
+    "start": 125652,
+    "end": 125785,
+    "lines": 134,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/common/error-codes.js",
+    "start": 125787,
+    "end": 125851,
+    "lines": 65,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/tokenizer/preprocessor.js",
+    "start": 125853,
+    "end": 125946,
+    "lines": 94,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/tokenizer/named-entity-data.js",
+    "start": 125948,
+    "end": 145457,
+    "lines": 19510,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/tokenizer/index.js",
+    "start": 145459,
+    "end": 146995,
+    "lines": 1537,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/common/html.js",
+    "start": 146997,
+    "end": 147244,
+    "lines": 248,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/parser/open-element-stack.js",
+    "start": 147246,
+    "end": 147482,
+    "lines": 237,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/parser/formatting-element-list.js",
+    "start": 147484,
+    "end": 147594,
+    "lines": 111,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/utils/mixin.js",
+    "start": 147596,
+    "end": 147619,
+    "lines": 24,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/position-tracking/preprocessor-mixin.js",
+    "start": 147621,
+    "end": 147667,
+    "lines": 47,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/location-info/tokenizer-mixin.js",
+    "start": 147669,
+    "end": 147778,
+    "lines": 110,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/location-info/open-element-stack-mixin.js",
+    "start": 147780,
+    "end": 147806,
+    "lines": 27,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/location-info/parser-mixin.js",
+    "start": 147808,
+    "end": 147945,
+    "lines": 138,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/error-reporting/mixin-base.js",
+    "start": 147947,
+    "end": 147981,
+    "lines": 35,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/error-reporting/preprocessor-mixin.js",
+    "start": 147983,
+    "end": 148002,
+    "lines": 20,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/error-reporting/tokenizer-mixin.js",
+    "start": 148004,
+    "end": 148017,
+    "lines": 14,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/extensions/error-reporting/parser-mixin.js",
+    "start": 148019,
+    "end": 148061,
+    "lines": 43,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/tree-adapters/default.js",
+    "start": 148063,
+    "end": 148219,
+    "lines": 157,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/utils/merge-options.js",
+    "start": 148221,
+    "end": 148232,
+    "lines": 12,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/common/doctype.js",
+    "start": 148234,
+    "end": 148339,
+    "lines": 106,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/common/foreign-content.js",
+    "start": 148341,
+    "end": 148607,
+    "lines": 267,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/parser/index.js",
+    "start": 148609,
+    "end": 150396,
+    "lines": 1788,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/serializer/index.js",
+    "start": 150398,
+    "end": 150484,
+    "lines": 87,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5/lib/index.js",
+    "start": 150486,
+    "end": 150504,
+    "lines": 19,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5-htmlparser2-tree-adapter/node_modules/parse5/lib/common/html.js",
+    "start": 150506,
+    "end": 150753,
+    "lines": 248,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5-htmlparser2-tree-adapter/node_modules/parse5/lib/common/doctype.js",
+    "start": 150755,
+    "end": 150860,
+    "lines": 106,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/parse5-htmlparser2-tree-adapter/lib/index.js",
+    "start": 150862,
+    "end": 151118,
+    "lines": 257,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/color-name/index.js",
+    "start": 151120,
+    "end": 151864,
+    "lines": 745,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/color-convert/conversions.js",
+    "start": 151866,
+    "end": 152650,
+    "lines": 785,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/color-convert/route.js",
+    "start": 152652,
+    "end": 152711,
+    "lines": 60,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/color-convert/index.js",
+    "start": 152713,
+    "end": 152753,
+    "lines": 41,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/ansi-styles/index.js",
+    "start": 152755,
+    "end": 152888,
+    "lines": 134,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/has-flag/index.js",
+    "start": 152890,
+    "end": 152898,
+    "lines": 9,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/supports-color/index.js",
+    "start": 152900,
+    "end": 152966,
+    "lines": 67,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/chalk/source/util.js",
+    "start": 152968,
+    "end": 153000,
+    "lines": 33,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/chalk/source/templates.js",
+    "start": 153002,
+    "end": 153091,
+    "lines": 90,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/chalk/source/index.js",
+    "start": 153093,
+    "end": 153238,
+    "lines": 146,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/cli-highlight/dist/theme.js",
+    "start": 153240,
+    "end": 153502,
+    "lines": 263,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/terminal-text.ts",
+    "start": 153504,
+    "end": 154339,
+    "lines": 836,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/rich-markdown.ts",
+    "start": 154341,
+    "end": 156796,
+    "lines": 2456,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/assistant-stream.ts",
+    "start": 156798,
+    "end": 156902,
+    "lines": 105,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/registry.ts",
+    "start": 156904,
+    "end": 156971,
+    "lines": 68,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/background-task-events.ts",
+    "start": 156973,
+    "end": 157237,
+    "lines": 265,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/background-task-output.ts",
+    "start": 157239,
+    "end": 157269,
+    "lines": 31,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/bounded-tool-text.ts",
+    "start": 157271,
+    "end": 157419,
+    "lines": 149,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/renderable.ts",
+    "start": 157421,
+    "end": 157431,
+    "lines": 11,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/choice-dialog.ts",
+    "start": 157433,
+    "end": 157906,
+    "lines": 474,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/color-scheme.ts",
+    "start": 157908,
+    "end": 157932,
+    "lines": 25,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/events.ts",
+    "start": 157934,
+    "end": 158302,
+    "lines": 369,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/turn-status.ts",
+    "start": 158304,
+    "end": 158348,
+    "lines": 45,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/exit-summary.ts",
+    "start": 158350,
+    "end": 158389,
+    "lines": 40,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/plan-editor.ts",
+    "start": 158391,
+    "end": 158412,
+    "lines": 22,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/footer-bar.ts",
+    "start": 158414,
+    "end": 158445,
+    "lines": 32,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/goal-status.ts",
+    "start": 158447,
+    "end": 158502,
+    "lines": 56,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/session-status.ts",
+    "start": 158504,
+    "end": 158556,
+    "lines": 53,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/context-status-view.ts",
+    "start": 158558,
+    "end": 158805,
+    "lines": 248,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/context-breakdown.ts",
+    "start": 158807,
+    "end": 158872,
+    "lines": 66,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/context-cache.ts",
+    "start": 158874,
+    "end": 159008,
+    "lines": 135,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/base.js",
+    "start": 159010,
+    "end": 159186,
+    "lines": 177,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/character.js",
+    "start": 159188,
+    "end": 159190,
+    "lines": 3,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/util/string.js",
+    "start": 159192,
+    "end": 159280,
+    "lines": 89,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/word.js",
+    "start": 159282,
+    "end": 159389,
+    "lines": 108,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/line.js",
+    "start": 159391,
+    "end": 159419,
+    "lines": 29,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/sentence.js",
+    "start": 159421,
+    "end": 159446,
+    "lines": 26,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/css.js",
+    "start": 159448,
+    "end": 159454,
+    "lines": 7,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/json.js",
+    "start": 159456,
+    "end": 159509,
+    "lines": 54,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/diff/array.js",
+    "start": 159511,
+    "end": 159523,
+    "lines": 13,
+    "depth": 1
+  },
+  {
+    "name": "node_modules/diff/libesm/patch/parse.js",
+    "start": 159525,
+    "end": 159846,
+    "lines": 322,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/theme.ts",
+    "start": 159848,
+    "end": 160111,
+    "lines": 264,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/file-diff-view.ts",
+    "start": 160113,
+    "end": 160499,
+    "lines": 387,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/diff-browser.ts",
+    "start": 160501,
+    "end": 160563,
+    "lines": 63,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/interactions.ts",
+    "start": 160565,
+    "end": 160698,
+    "lines": 134,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/helpers.ts",
+    "start": 160700,
+    "end": 160875,
+    "lines": 176,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/filesystem.ts",
+    "start": 160877,
+    "end": 160933,
+    "lines": 57,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/execution.ts",
+    "start": 160935,
+    "end": 161170,
+    "lines": 236,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/workflow.ts",
+    "start": 161172,
+    "end": 161275,
+    "lines": 104,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/interaction.ts",
+    "start": 161277,
+    "end": 161347,
+    "lines": 71,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/web.ts",
+    "start": 161349,
+    "end": 161448,
+    "lines": 100,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-renderers/index.ts",
+    "start": 161450,
+    "end": 161482,
+    "lines": 33,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/permission-view.ts",
+    "start": 161484,
+    "end": 161553,
+    "lines": 70,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/permission-request-queue.ts",
+    "start": 161555,
+    "end": 161564,
+    "lines": 10,
+    "depth": 1
+  },
+  {
+    "name": "src/app-server-client.ts",
+    "start": 161566,
+    "end": 161708,
+    "lines": 143,
+    "depth": 1
+  },
+  {
+    "name": "src/plugin-protocol.ts",
+    "start": 161710,
+    "end": 161730,
+    "lines": 21,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/plugin-references.ts",
+    "start": 161732,
+    "end": 161833,
+    "lines": 102,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/panels.ts",
+    "start": 161835,
+    "end": 161990,
+    "lines": 156,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/notifications.ts",
+    "start": 161992,
+    "end": 162276,
+    "lines": 285,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/stream-error-guard.ts",
+    "start": 162278,
+    "end": 162288,
+    "lines": 11,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tui-mode.ts",
+    "start": 162290,
+    "end": 162315,
+    "lines": 26,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/copy-on-select.ts",
+    "start": 162317,
+    "end": 162334,
+    "lines": 18,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/session-title.ts",
+    "start": 162336,
+    "end": 162369,
+    "lines": 34,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/selectors.ts",
+    "start": 162371,
+    "end": 162490,
+    "lines": 120,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/rewind.ts",
+    "start": 162492,
+    "end": 162547,
+    "lines": 56,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/protocol-part-view.ts",
+    "start": 162549,
+    "end": 162630,
+    "lines": 82,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/input-queue.ts",
+    "start": 162632,
+    "end": 162845,
+    "lines": 214,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/queued-input-view.ts",
+    "start": 162847,
+    "end": 162898,
+    "lines": 52,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/runtime-projection.ts",
+    "start": 162900,
+    "end": 163178,
+    "lines": 279,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/runtime-activity-view.ts",
+    "start": 163180,
+    "end": 163262,
+    "lines": 83,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/runtime-poll.ts",
+    "start": 163264,
+    "end": 163279,
+    "lines": 16,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/selection-command.ts",
+    "start": 163281,
+    "end": 163350,
+    "lines": 70,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/skills.ts",
+    "start": 163352,
+    "end": 163474,
+    "lines": 123,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/shortcuts.ts",
+    "start": 163476,
+    "end": 163516,
+    "lines": 41,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/status-line.ts",
+    "start": 163518,
+    "end": 163558,
+    "lines": 41,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/system-event-view.ts",
+    "start": 163560,
+    "end": 163596,
+    "lines": 37,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/thinking-view.ts",
+    "start": 163598,
+    "end": 163745,
+    "lines": 148,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-group-view.ts",
+    "start": 163747,
+    "end": 163811,
+    "lines": 65,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-tree-view.ts",
+    "start": 163813,
+    "end": 163958,
+    "lines": 146,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/plan-view.ts",
+    "start": 163960,
+    "end": 164210,
+    "lines": 251,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/tool-view.ts",
+    "start": 164212,
+    "end": 165042,
+    "lines": 831,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/turn-presentation-registry.ts",
+    "start": 165044,
+    "end": 165088,
+    "lines": 45,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/turn-work-tracker.ts",
+    "start": 165090,
+    "end": 165173,
+    "lines": 84,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/update-available-view.ts",
+    "start": 165175,
+    "end": 165189,
+    "lines": 15,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/fullscreen-header.ts",
+    "start": 165191,
+    "end": 165329,
+    "lines": 139,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/workspace-autocomplete.ts",
+    "start": 165331,
+    "end": 165476,
+    "lines": 146,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/workspace-diff.ts",
+    "start": 165478,
+    "end": 165704,
+    "lines": 227,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/work-duration-view.ts",
+    "start": 165706,
+    "end": 165727,
+    "lines": 22,
+    "depth": 1
+  },
+  {
+    "name": "packages/zcode-tui/src/index.ts",
+    "start": 165729,
+    "end": 170419,
+    "lines": 4691,
+    "depth": 1
+  }
+]

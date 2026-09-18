@@ -31,13 +31,23 @@ function tuiEnv(): Record<string, string> {
   return { ZAI_BUSINESS_BASE_URL: server.url, ZCODE_BASE_URL: server.url };
 }
 
-async function withTui(fn: (tui: TuiSession) => Promise<void>) {
-  const tui = await startTui(sandbox, ["tui"], { extraEnv: tuiEnv() });
+async function withTui(fn: (tui: TuiSession) => Promise<void>, options: { respondQueries?: "dark" | "light" | "none" } = {}) {
+  const tui = await startTui(sandbox, { args: ["tui"], extraEnv: tuiEnv(), respondQueries: options.respondQueries });
   try {
     await fn(tui);
   } finally {
     await tui.close();
   }
+}
+
+// Type a slash command with the accept-then-submit double Enter (the first
+// Enter accepts the autocomplete completion, exactly as on a real terminal).
+async function typeCommand(tui: TuiSession, command: string): Promise<void> {
+  tui.type(command);
+  await Bun.sleep(400);
+  tui.type("\r");
+  await Bun.sleep(400);
+  tui.type("\r");
 }
 
 describe("tui offline", () => {
@@ -67,24 +77,29 @@ describe("tui offline", () => {
 
   test("/status opens the status detail panel", async () => {
     await withTui(async (tui) => {
-      tui.type("/status\r");
-      await tui.waitForText(/Status|Session|Model/i, 15_000);
+      await typeCommand(tui, "/status");
+      // Panel content is unique — the autocomplete popup says "Inspect
+      // detailed runtime and session status", which must NOT count.
+      const buffer = await tui.waitForBuffer("Detailed session information", 20_000);
+      expect(buffer).toContain("Detailed session information. The compact statusline remains intentionally minimal.");
       tui.type("\u001b"); // Esc closes overlays
       await Bun.sleep(500);
     });
   }, 60_000);
 
-  test("/help lists commands", async () => {
+  test("/help lists the runtime slash commands", async () => {
     await withTui(async (tui) => {
-      tui.type("/help\r");
-      await tui.waitForText(/help|commands/i, 15_000);
+      await typeCommand(tui, "/help");
+      const text = await tui.waitForText("Use /help <command> for details.", 20_000);
+      expect(text).toContain("Slash commands:");
+      expect(text).toContain("/compact [instructions]");
       tui.type("\u001b");
       await Bun.sleep(500);
     });
   }, 60_000);
 
   test("/exit terminates cleanly with code 0", async () => {
-    const tui = await startTui(sandbox, ["tui"]);
+    const tui = await startTui(sandbox, { args: ["tui"] });
     tui.type("/exit\r");
     const deadline = Date.now() + 20_000;
     while (Date.now() < deadline && tui.exitCode() === null) await Bun.sleep(50);

@@ -1,0 +1,78 @@
+╭─ ◆ ZCODE  v0.16.5 ───────────────────────────────────────────────────────╮
+│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-5rTJkm/workspace │
+│ Ask a task about this workspace                                          │
+╰─ /help commands · /status details ───────────────────────────────────────╯
+
+ › /help                                                                                                      
+
+ Slash commands:                                                                                              
+ - /help [command]: Show this slash command help.                                                             
+ - /login [zai-coding-plan|bigmodel-coding-plan|zai-coding-plan-api-key                                       
+   <api-key>|bigmodel-coding-plan-api-key <api-key>]: Set up a Coding Plan provider.                          
+ - /logout: Remove the shared Z.ai login credentials.                                                         
+ - /compact [instructions]: Compact the current conversation with optional instructions.                      
+ - /init [notes]: Create or update workspace AGENTS.md instructions.                                          
+ - /expert [status|resume|stop|<task>]: Run or manage the expert workflow.                                    
+ - /effort [list|<level>]: Show or switch the current session reasoning effort.                               
+ - /workflow [create [--name <name>] [--user] [--overwrite] <description>|validate|run|status|resume]         
+   <scriptPath|runId> [args-json]: Create, validate, or run a script workflow.                                
+ - /workflows [runId]: List or inspect workflow runs.                                                         
+ - /fork [latest|checkpointId]: Fork a new session from a workspace checkpoint.                               
+ - /locale [auto|en-US|zh-CN]: Show or switch the UI locale.                                                  
+ - /mcp [list|status|connect <server>|disconnect <server>]: Show or manage configured MCP servers.            
+ - /plugins [list|enable <plugin>|disable <plugin>]: Open the plugin manager.                                 
+ - /mode [build|edit|yolo]: Show or switch the current permission mode.                                       
+ - /model [list|provider/model]: Show or switch the current session model.                                    
+ - /new: Start a fresh session in the TUI.                                                                    
+ - /resume [sessionId]: Resume a saved session.                                                               
+ - /rewind [latest|checkpointId]: Inspect or restore workspace checkpoints.                                   
+ - /skill [<skill-name> [task]]: List skills, or force the next prompt to load one.                           
+ - /goal [pause|resume|clear|replace <objective>|<objective>]: Show or set the current session goal.          
+                                                                                                              
+ Use /help <command> for details.                                                                             
+
+ [ ✓ 0s ]
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                              
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ ◈ mock/mock-model ─ ◉ build ─ ⚡ enabled ─ ctx 100% left ─ session 0 tokens
+
+=== buffer ===
+╭─ ◆ ZCODE  v0.16.5 ───────────────────────────────────────────────────────╮
+│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-5rTJkm/workspace │
+│ Ask a task about this workspace                                          │
+╰─ /help commands · /status details ───────────────────────────────────────╯
+
+ › /help                                                                                                      
+
+ Slash commands:                                                                                              
+ - /help [command]: Show this slash command help.                                                             
+ - /login [zai-coding-plan|bigmodel-coding-plan|zai-coding-plan-api-key                                       
+   <api-key>|bigmodel-coding-plan-api-key <api-key>]: Set up a Coding Plan provider.                          
+ - /logout: Remove the shared Z.ai login credentials.                                                         
+ - /compact [instructions]: Compact the current conversation with optional instructions.                      
+ - /init [notes]: Create or update workspace AGENTS.md instructions.                                          
+ - /expert [status|resume|stop|<task>]: Run or manage the expert workflow.                                    
+ - /effort [list|<level>]: Show or switch the current session reasoning effort.                               
+ - /workflow [create [--name <name>] [--user] [--overwrite] <description>|validate|run|status|resume]         
+   <scriptPath|runId> [args-json]: Create, validate, or run a script workflow.                                
+ - /workflows [runId]: List or inspect workflow runs.                                                         
+ - /fork [latest|checkpointId]: Fork a new session from a workspace checkpoint.                               
+ - /locale [auto|en-US|zh-CN]: Show or switch the UI locale.                                                  
+ - /mcp [list|status|connect <server>|disconnect <server>]: Show or manage configured MCP servers.            
+ - /plugins [list|enable <plugin>|disable <plugin>]: Open the plugin manager.                                 
+ - /mode [build|edit|yolo]: Show or switch the current permission mode.                                       
+ - /model [list|provider/model]: Show or switch the current session model.                                    
+ - /new: Start a fresh session in the TUI.                                                                    
+ - /resume [sessionId]: Resume a saved session.                                                               
+ - /rewind [latest|checkpointId]: Inspect or restore workspace checkpoints.                                   
+ - /skill [<skill-name> [task]]: List skills, or force the next prompt to load one.                           
+ - /goal [pause|resume|clear|replace <objective>|<objective>]: Show or set the current session goal.          
+                                                                                                              
+ Use /help <command> for details.                                                                             
+
+ [ ✓ 0s ]
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                              
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ ◈ mock/mock-model ─ ◉ build ─ ⚡ enabled ─ ctx 100% left ─ session 0 tokens

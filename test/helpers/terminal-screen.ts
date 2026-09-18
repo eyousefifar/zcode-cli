@@ -83,6 +83,48 @@ export class TerminalScreen implements Disposable {
     this.#terminal.resize(cols, rows);
   }
 
+  /** Cell-level access for color/style assertions (theme determinism etc.). */
+  cellAt(col: number, row: number, fullBuffer = false): { chars: string; fg: number | "default"; bg: number | "default"; inverse: boolean; bold: boolean; italic: boolean; underline: boolean } | undefined {
+    const buffer = this.#terminal.buffer.active;
+    const lineY = fullBuffer ? row : buffer.viewportY + row;
+    const cell = buffer.getLine(lineY)?.getCell(col);
+    if (!cell) return undefined;
+    const color = (value: number, isRGB: boolean): number | "default" => {
+      if (value < 0) return "default";
+      // xterm packs truecolor as 0xRRGGBB when isRGB() — keep it numeric.
+      return isRGB ? value : value;
+    };
+    return {
+      chars: cell.getChars() || " ",
+      fg: color(cell.getFgColor(), cell.isFgRGB()),
+      bg: color(cell.getBgColor(), cell.isBgRGB()),
+      inverse: cell.isInverse(),
+      bold: cell.isBold(),
+      italic: cell.isItalic(),
+      underline: cell.isUnderline(),
+    };
+  }
+
+  /** Visible-screen row count and total buffer row count. */
+  dimensions(): { cols: number; rows: number; bufferRows: number } {
+    const buffer = this.#terminal.buffer.active;
+    return { cols: this.#terminal.cols, rows: this.#terminal.rows, bufferRows: buffer.length };
+  }
+
+  /** First visible-screen location whose cell chars contain `needle`. */
+  findCell(needle: string): { col: number; row: number } | undefined {
+    const buffer = this.#terminal.buffer.active;
+    for (let row = 0; row < this.#terminal.rows; row += 1) {
+      const line = buffer.getLine(buffer.viewportY + row);
+      if (!line) continue;
+      for (let col = 0; col < this.#terminal.cols; col += 1) {
+        const chars = line.getCell(col)?.getChars() ?? "";
+        if (chars && needle.includes(chars)) return { col, row };
+      }
+    }
+    return undefined;
+  }
+
   dispose(): void {
     this.#terminal.dispose();
   }
