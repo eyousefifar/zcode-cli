@@ -1,21 +1,21 @@
 {
   "name": "@eyousefifar/zcode-cli",
   "version": "0.16.5",
-  "description": "Unofficial standalone distribution of the ZCode CLI (the agent engine from the ZCode desktop app) — single binary via bun compile, or a thin npm package for node/bun.",
+  "description": "Unofficial standalone distribution of the ZCode CLI (the agent engine from the ZCode desktop app) — single binary via bun compile, or a thin package that runs on bun.",
   "license": "UNLICENSED",
   "private": false,
   "type": "module",
   "bin": {
-    "zcode": "./src/bin.js"
+    "zcode": "./dist-npm/entry.js"
   },
   "files": [
-    "src/",
-    "vendor/",
+    "dist-npm/",
+    "vendor/zcode-builtin.json",
+    "vendor/cli-settings-default.json",
     "README.md",
     "LICENSE-NOTE"
   ],
   "engines": {
-    "node": ">=22.5",
     "bun": ">=1.1.21"
   },
   "scripts": {
@@ -37,6 +37,7 @@
   "author": "Erfan Yousefifar",
   "devDependencies": {
     "@earendil-works/pi-tui": "0.85.1",
+    "@xterm/headless": "6.0.0",
     "@zcode/tui": "file:./stubs/@zcode/tui-real",
     "playwright-core": "file:./stubs/playwright-core"
   }

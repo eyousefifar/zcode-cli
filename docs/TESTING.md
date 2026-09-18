@@ -1,79 +1,68 @@
-# Test results — standalone zcode binary
+# Test & verification
 
-- **Date**: 2026-09-18 (updated after TUI integration)
-- **Binary**: `dist/zcode` (bun 1.4.2, `bun build --compile`), upstream CLI version 0.16.5
-- **Host**: macOS 27.0.0, darwin/arm64
-- **Auth**: isolated store at `~/.zcode-standalone/.zcode/v2`; recommended access path is the
-  coding-plan **API key** (OAuth tokens rotate whenever the desktop app is running, which
-  invalidates the CLI's copy within minutes)
-- **Model default**: `zai-api-key` provider / `GLM-5.3-Flash`
+Three layers, all bun-only:
 
-## Matrix
+| Layer | Command | What it does | Network |
+|---|---|---|---|
+| Offline sandbox e2e | `bun test test/` | 21 tests: headless + TUI through the real binary against a local mock model server | none |
+| Flag matrix | `bash scripts/test.sh` | 27 documented-flag cases against the real API | real (small quota) |
+| Perf baseline | `bash scripts/perf.sh` | startup latency, RSS, turn latency, CPU call-tree sample | real |
 
-| Case | Result | Notes |
-|---|---|---|
-| `--version` | PASS | `0.16.5` |
-| `--help` | PASS | |
-| `doctor` | PASS | reports `node: v26.3.0` (bun runtime), `sea: no (optional)` |
-| `skills list` | PASS | |
-| `commands list` | PASS | |
-| `plugins list` | PASS | |
-| `tui` | PASS* | boots, renders (banner, statusline with model/mode/effort), accepts input, submits. Verified under a scripted pty; response rendering in real terminals pending human verification. The TUI is [kingsword09/zcode-cli](https://github.com/kingsword09/zcode-cli)'s MIT-licensed `@zcode/tui`. |
-| `-p --prepare-storage` | PASS | modifier flag, not a standalone command |
-| `-p` plain text | PASS | prints reply to stdout |
-| `-p --json` | PASS | JSON with `sessionId`, `usage`, `projection` |
-| `-p --output-format json` | PASS | |
-| `-p --output-format stream-json` | PASS | |
-| `-p --mode plan\|edit\|build\|yolo` | PASS | |
-| `-p --verbose` | PASS | |
-| `-p --no-color` | PASS | |
-| `-p --locale zh-CN` | PASS | (one initial failure was an API rate limit, not the flag) |
-| `-p --surface terminal` | PASS | |
-| `-p -f` (force) | PASS | |
-| `-p --attach <file>` | PASS | file content reaches the model |
-| `-p --cwd <dir>` | PASS | |
-| `-p --disallowed-tools "Bash,Edit"` | PASS | |
-| `--resume <sessionId> -p` | PASS | session continuity verified |
-| `-c -p` (continue latest) | PASS | |
-| `--target "<goal>"` | PASS (behavior) | starts an autonomous agent run; mutually exclusive with `-p` |
+The release gate runs everything: `bash scripts/gate.sh` (add `RUN_ONLINE=1`
+to include the real-API matrix).
+
+## Offline sandbox suite (`bun test test/`)
+
+Mechanism: each test builds a sandbox (temp `HOME`, isolated
+`ZCODE_DATA_BASE_DIR`, a personal provider fixture whose `baseUrl` points at a
+local `Bun.serve` mock implementing both OpenAI chat-completions and
+Anthropic-messages wire protocols), then drives the **compiled binary** —
+headless via `Bun.spawn`, TUI via a real pty (`Bun.Terminal`) with
+screen-state assertions through an emulated terminal (`@xterm/headless`).
+
+Covered: plain `-p`, `--json` contract, `stream-json`, request journal
+(model/stream/auth), rate-limit + retry, 401, 500, malformed SSE, aborted
+streams (retry count asserted), `--resume`, `-c`, `--attach` (request body
+contains the file), `--mode build/edit/yolo` acceptance + `plan` rejection,
+unknown-flag error, `doctor`, `skills/commands/plugins list`; TUI boot,
+submit→stream→render (mock sentinel asserted on the emulated screen),
+`/status`, `/help`, `/exit` code 0.
+
+## Flag matrix (`scripts/test.sh`)
+
+27 cases against the real API: every parsed flag, all permission modes,
+attach, resume/continue, target, verbose/locale/no-color, hidden flags, TUI
+launch, doctor/skills/commands/plugins.
+
+## Performance baseline (2026-09-18, darwin/arm64)
+
+- startup (`--version`): **median 0.34 s** (min 0.34, max 0.37), 10 runs
+- short `--json` turn: **median 5.6 s** (dominated by model TTFT ≈ 4.5 s)
+- CPU call-tree sample saved to `/tmp/zcode-perf/cpu.sample.txt`
 
 ## Verified behaviors & known discrepancies
 
-1. **Help lies about some flags.** `--help` advertises `--allowed-tools`,
-   `--max-turns`, `--permission-mode`, `--settings` and
-   `--allow-main-worktree-yolo`, but they are **not in the actual argument
-   parser** and exit with `Unknown option`. Real flags are listed in
-   [OPTIONS.md](OPTIONS.md).
-2. **`--target` and `-p/--prompt` are mutually exclusive** (enforced with a
-   clear error: "Use either --target <objective> or --prompt ...").
-3. **Interactive TUI (experimental).** Bundled from
-   [kingsword09/zcode-cli](https://github.com/kingsword09/zcode-cli)
-   (`@zcode/tui`, MIT). Verified: boot, full render, input, model resolution,
-   submit without crashes. Not yet verified end-to-end in a real terminal —
-   if submit silently does nothing, the TUI build doesn't fully pair with the
-   darwin 0.16.5 runtime build; headless mode remains the supported path.
-4. **CDN update check is stderr noise.** Occasionally a line like
-   `ZCode Built-in missing` or `ZCode Built-in skipped (not-due)` appears on
-   stderr — it's the CLI's time-gated check for an updated builtin provider
-   config fetched from a CDN. Harmless; stdout (and `--json` output) stay
-   clean.
-5. **Rate limits surface verbosely.** Z.ai API error 1302 (rate limit) is
-   printed as a `ProviderBusinessError` with a source code frame. Back off
-   and retry.
-6. **`cacheControl breakpoint` warnings.** Long system prompts may trigger
-   "Maximum 4 cache breakpoints exceeded" warnings from the AI SDK
-   (upstream behavior).
-7. **Minimal environments need `USER`.** The runtime keys provider/credential
-   state on the unix username; without `USER` in the environment model
-   resolution fails with "Select a model before continuing". The shim sets it
-   from `os.userInfo()` automatically.
-8. **OAuth tokens rotate.** While the desktop app is running it refreshes the
-   shared account's OAuth token, which invalidates a CLI-logged-in copy within
-   minutes. Use the API-key provider for standalone use (see below).
+1. **`--mode plan` is rejected** by this runtime build ("Unsupported --mode
+   value: plan. Supported modes: build, edit, yolo"). Use `/plan` in the TUI.
+2. **`--target` and `-p/--prompt` are mutually exclusive** (clear error).
+3. **TUI (experimental).** Bundled from
+   [kingsword09/zcode-cli](https://github.com/kingsword09/zcode-cli). The
+   offline sandbox suite drives real turns through it end-to-end. The
+   vendor runtime carries their sync patches (session-event bridge) plus our
+   defensive optional-chaining fixes — see [../LICENSE-NOTE](../LICENSE-NOTE).
+4. **CDN update check is stderr noise** (`ZCode Built-in skipped
+   (not-due)`); stdout/`--json` stay clean.
+5. **Rate limits surface verbosely** (Z.ai error 1302 →
+   `ProviderBusinessError`). Back off and retry.
+6. **Minimal environments need `USER`.** Without it model resolution fails
+   ("Select a model before continuing"). The shim sets it from
+   `os.userInfo()`.
+7. **OAuth tokens rotate.** While the desktop app runs it refreshes the
+   shared account token, invalidating a CLI login within minutes. Use the
+   API-key provider for standalone use (below).
 
-## Model selection notes
+## Model selection (API-key recipe, recommended)
 
-Recommended standalone setup — an API-key provider in
 `<data-dir>/.zcode/v2/provider_config.json`:
 
 ```json
@@ -95,18 +84,24 @@ Recommended standalone setup — an API-key provider in
         }
       }]
     },
-    "defaultModelSelection": {
-      "providerId": "zai-api-key",
-      "modelId": "GLM-5.3-Flash"
-    }
+    "defaultModelSelection": { "providerId": "zai-api-key", "modelId": "GLM-5.3-Flash" }
   }
 }
 ```
 
 The `zai-api` template supplies the anthropic-compatible base URL and the
-`GLM-5.3` / `GLM-5.3-Flash` model definitions. API keys are created at
-<https://z.ai/manage-apikey/apikey-list>.
+`GLM-5.3` / `GLM-5.3-Flash` model definitions. Keys: <https://z.ai/manage-apikey/apikey-list>.
 
-`zcode login` (Z.AI OAuth) also works, but the token is invalidated whenever
-the desktop app refreshes its own session, so API-key access is the stable
-choice for the standalone binary.
+Notes:
+
+- The runtime's rule schema is **strict** — absent keys only (`"templateId":
+  null` silently empties the provider registry).
+- The TUI's login gate requires **coding-plan** access: either this
+  API-key recipe or `zcode login` state. A generic `api-key` provider passes
+  headless but blocks TUI submission.
+- Credentials are AES-256-GCM encrypted with
+  `sha256("zcode-credential-fallback:<platform>:<homedir>:<username>")`
+  unless `ZCODE_CREDENTIAL_SECRET` is set (the sandbox tests reproduce the
+  real secret to copy login state).
+- The desktop app injects its own model adapter and ignores this resolution —
+  which is why a fresh standalone install needs its own login/API-key setup.

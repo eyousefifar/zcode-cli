@@ -8,7 +8,7 @@ Verified against the actual argument parser embedded in `vendor/zcode.cjs`
 
 | Command | Description |
 |---|---|
-| *(none)* / `tui` | Full-screen TUI. **Unavailable in this build** (the `@zcode/tui` package is not shipped with the CLI bundle). |
+| *(none)* / `tui` | Full-screen TUI (experimental; bundled from kingsword09/zcode-cli — see README). |
 | `login` | Sign in with Z.AI OAuth. `--no-browser` prints the URL instead of opening a browser. |
 | `logout` | Remove login credentials from the data dir. |
 | `doctor` | Inspect runtime/packaging assumptions. |
@@ -30,7 +30,7 @@ Verified against the actual argument parser embedded in `vendor/zcode.cjs`
 | `-c`, `--continue` | boolean | Continue the latest session for the current directory. |
 | `--target <text>` | string | Set/achieve a session goal as an autonomous run. **Mutually exclusive with `--prompt`.** |
 | `--target-replace` | boolean | Replace any existing session goal when using `--target`. |
-| `--mode <mode>` | `build` \| `edit` \| `plan` \| `yolo` | Permission mode. |
+| `--mode <mode>` | `build` \| `edit` \| `yolo` | Permission mode. `plan` is **rejected** by this runtime build (use `/plan` inside the TUI). |
 | `--verbose` | boolean | Extra diagnostic detail. |
 | `--no-color` | boolean | Disable ANSI colors. |
 | `--locale <locale>` | string | UI locale: `en-US`, `zh-CN`, `auto`. |
@@ -49,17 +49,11 @@ Verified against the actual argument parser embedded in `vendor/zcode.cjs`
 before the main parser (comma- or space-separated tool denylist, e.g.
 `"Bash(git *) Edit"`).
 
-## Advertised in `--help` but NOT parsed (upstream drift)
+## Not parsed by the argument parser (upstream drift)
 
-These exit with `Unknown option`:
-
-- `--max-turns <n>`
-- `--allowed-tools <list>`
-- `--permission-mode <mode>`
-- `--settings <path>`
-- `--allow-main-worktree-yolo`
-- `--model <id>` (never existed; model selection is configured via
-  `defaultModelSelection` — see [TESTING.md](TESTING.md))
+`--allowed-tools`, `--max-turns`, `--permission-mode`, `--settings` and
+`--model` are not accepted (model selection is configured via
+`defaultModelSelection` — see [TESTING.md](TESTING.md)).
 
 ## Exit codes
 

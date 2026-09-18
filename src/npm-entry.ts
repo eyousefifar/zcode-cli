@@ -1,13 +1,8 @@
-#!/usr/bin/env node
-// npm entry point for @eyousefifar/zcode-cli.
-//
-// Runs the vendored ZCode CLI bundle as-is under node (>=22.5, for
-// node:sqlite) or bun. Unlike the compiled binary (src/entry.ts), the
-// npm package ships real files, so no argv/virtual-fs repairs are needed —
-// only the provider-config and search-tool path setup.
+// npm package entry — bundled at publish time (dist-npm/entry.js) so the
+// runtime's `require("node:sea")` gets the same build-time shim the compiled
+// binary gets. Runs under bun only.
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { homedir, userInfo } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 
 // The runtime keys parts of the provider/credential layer on the unix
-// username (see src/entry.ts).
+// username; minimal environments (cron, CI) lack USER/LOGNAME.
 if (!process.env.USER) {
   try {
     process.env.USER = userInfo().username;
@@ -25,7 +20,8 @@ if (!process.env.USER) {
   }
 }
 
-// Isolated state dir — see src/entry.ts for rationale.
+// Isolated state dir — see src/entry.ts for rationale. Session DB and logs
+// remain under $HOME/.zcode/cli (upstream hardwires them).
 if (!process.env.ZCODE_DATA_BASE_DIR) {
   process.env.ZCODE_DATA_BASE_DIR = join(homedir(), ".zcode-standalone");
 }
@@ -35,18 +31,24 @@ if (process.env.ZCODE_DISABLE_UPDATE_CHECK === undefined) {
   process.env.ZCODE_DISABLE_UPDATE_CHECK = "1";
 }
 
-// Mirror upstream's `ensureCliSettings` (see src/entry.ts).
-import defaultCliSettings from "../vendor/cli-settings-default.json" with { type: "json" };
+// Mirror upstream's `ensureCliSettings`: create the CLI settings file (its
+// designed location, shared with the desktop app's CLI engine) if absent.
 try {
-  const cliDir = join(process.env.ZCODE_DATA_BASE_DIR, ".zcode", "cli");
+  const cliDir = join(homedir(), ".zcode", "cli");
   const cliSettingsPath = join(cliDir, "setting.json");
   if (!existsSync(cliSettingsPath)) {
     mkdirSync(cliDir, { recursive: true, mode: 0o700 });
-    writeFileSync(cliSettingsPath, `${JSON.stringify(defaultCliSettings, null, 2)}\n`, { mode: 0o600 });
+    writeFileSync(
+      cliSettingsPath,
+      `${JSON.stringify(JSON.parse(readFileSync(join(here, "../vendor/cli-settings-default.json"), "utf8")), null, 2)}\n`,
+      { mode: 0o600 },
+    );
   }
 } catch {
-  // best effort
+  // best effort — the runtime tolerates a missing file
 }
+
+import { readFileSync } from "node:fs";
 
 if (!process.env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE) {
   const bundled = join(here, "../vendor/zcode-builtin.json");
@@ -65,5 +67,4 @@ for (const [envVar, toolPath] of bundledTools) {
   }
 }
 
-const require = createRequire(import.meta.url);
-require("../vendor/zcode.cjs");
+await import("../vendor/zcode.cjs");

@@ -1,15 +1,14 @@
 This repository contains three kinds of code with different terms:
 
-1. `vendor/zcode.cjs` and `vendor/zcode-builtin.json`
-   Proprietary software of Z.ai (https://z.ai), redistributed here from the
-   ZCode desktop application
-   (/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs, version 0.16.5)
-   with **two minimal defensive patches**: four property reads in the TUI
-   turn-metadata formatter (`e.locale`/`e.mode`/`e.model`/`e.theme`/
-   `e.thoughtLevel`) use optional chaining, because the bundled third-party
-   TUI triggers them with an undefined payload on this runtime build. The
-   patch is visible in git history; all other code is byte-identical to the
-   app bundle. All rights remain with Z.ai. This packaging is an unofficial,
+1. `vendor/zcode.cjs`, `vendor/cli-config.cjs` and `vendor/zcode-builtin.json`
+   Proprietary software of Z.ai (https://z.ai). The runtime is the ZCode
+   desktop app's CLI engine (version 0.16.5) in the patched form produced by
+   kingsword09/zcode-cli's sync tooling (their MIT-licensed repo applies
+   documented interop bridges to the extracted bundle), plus two defensive
+   changes of ours: optional chaining on five property reads in the TUI
+   turn-metadata formatter, and rewiring the `cli-config.cjs` require to a
+   bundler-resolvable relative path. Every change is visible in git history.
+   All rights remain with Z.ai. This packaging is an unofficial,
    non-affiliated interoperability effort; if you are Z.ai and object to this
    redistribution, open an issue and it will be taken down.
 
@@ -18,7 +17,10 @@ This repository contains three kinds of code with different terms:
    (https://github.com/kingsword09/zcode-cli), MIT licensed. Unmodified
    build artifact of their `packages/zcode-tui` package.
 
-3. Everything else (src/, scripts/, build.ts, stubs/, docs/, workflows)
+3. `test/helpers/terminal-screen.ts`
+   Vendored from kingsword09/zcode-cli (MIT; see vendor/zcode-tui-LICENSE).
+
+4. Everything else (src/, scripts/, build.ts, stubs/, docs/, test/, workflows)
    Written for this repository and provided under the MIT License:
 
    MIT License

@@ -1,0 +1,199 @@
+// Mock model API server for offline sandbox testing.
+//
+// Implements the two wire protocols the runtime speaks — OpenAI chat
+// completions and Anthropic messages — against 127.0.0.1, records every
+// request it receives, and can inject failures (rate limits, auth errors,
+// truncated streams, malformed payloads). The default success body carries a
+// unique sentinel so tests can assert the full pipeline rendered it.
+
+
+export interface RecordedRequest {
+  seq: number;
+  protocol: "openai" | "anthropic";
+  url: string;
+  model: string | undefined;
+  stream: boolean;
+  authPrefix: string;
+  headers: Record<string, string>;
+  body: unknown;
+  at: number;
+}
+
+export type Scenario =
+  | { kind: "success"; text?: string; chunks?: number }
+  | { kind: "rate-limit"; retryAfterSeconds?: number }
+  | { kind: "unauthorized" }
+  | { kind: "server-error" }
+  | { kind: "malformed-sse" }
+  | { kind: "cut-stream"; afterChunks?: number }
+  | { kind: "slow"; chunkDelayMs: number; chunks?: number };
+
+export interface ModelServer {
+  url: string;
+  requests(): RecordedRequest[];
+  setScenario(scenario: Scenario): void;
+  close(): Promise<void>;
+}
+
+export interface StartOptions {
+  /** Default success text; tests wait for this sentinel on screen/output. */
+  sentinel?: string;
+  scenario?: Scenario;
+  journalPath?: string;
+}
+
+const ANTHROPIC_1302 = {
+  type: "error",
+  error: { type: "rate_limit_error", code: "1302", message: "[1302][Rate limit reached for requests][mock]" },
+};
+
+function sseChunk(content: string, role = "assistant") {
+  return `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role, content }, finish_reason: null }] })}\n\n`;
+}
+const SSE_DONE = "data: [DONE]\n\n";
+
+function openAiNonStream(text: string) {
+  return Response.json({
+    id: "chatcmpl-mock", object: "chat.completion", created: 1, model: "mock",
+    choices: [{ index: 0, message: { role: "assistant", content: text }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+  });
+}
+
+function openAiStream(text: string, chunks = 3) {
+  const parts: string[] = [];
+  const size = Math.ceil(text.length / chunks);
+  for (let i = 0; i < text.length; i += size) {
+    parts.push(sseChunk(text.slice(i, i + size)));
+  }
+  // Usage rides on the final chunk, mirroring stream_options.include_usage.
+  parts.push(`data: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: "stop" }], usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 } })}\n\n`);
+  parts.push(SSE_DONE);
+  return new Response(parts.join(""), { headers: { "content-type": "text/event-stream" } });
+}
+
+function anthropicNonStream(text: string) {
+  return Response.json({
+    id: "msg_mock", type: "message", role: "assistant", model: "mock",
+    content: [{ type: "text", text }],
+    stop_reason: "end_turn",
+    usage: { input_tokens: 10, output_tokens: 5 },
+  });
+}
+
+function anthropicStream(text: string, chunks = 3) {
+  const parts: string[] = [
+    `event: message_start\ndata: ${JSON.stringify({ type: "message_start", message: { id: "msg_mock", type: "message", role: "assistant", model: "mock", content: [], usage: { input_tokens: 10, output_tokens: 0 } } })}\n\n`,
+    `event: content_block_start\ndata: ${JSON.stringify({ type: "content_block_start", index: 0, content_block: { type: "text", text: "" } })}\n\n`,
+  ];
+  const size = Math.ceil(text.length / chunks);
+  for (let i = 0; i < text.length; i += size) {
+    parts.push(`event: content_block_delta\ndata: ${JSON.stringify({ type: "content_block_delta", index: 0, delta: { type: "text_delta", text: text.slice(i, i + size) } })}\n\n`);
+  }
+  parts.push(`event: content_block_stop\ndata: ${JSON.stringify({ type: "content_block_stop", index: 0 })}\n\n`);
+  parts.push(`event: message_delta\ndata: ${JSON.stringify({ type: "message_delta", delta: { stop_reason: "end_turn" }, usage: { output_tokens: 5 } })}\n\n`);
+  parts.push(`event: message_stop\ndata: ${JSON.stringify({ type: "message_stop" })}\n\n`);
+  return new Response(parts.join(""), { headers: { "content-type": "text/event-stream" } });
+}
+
+export async function startModelServer(options: StartOptions = {}): Promise<ModelServer> {
+  let scenario: Scenario = options.scenario ?? { kind: "success" };
+  let seq = 0;
+  const recorded: RecordedRequest[] = [];
+  const sentinel = options.sentinel ?? "MOCKED-RESPONSE-OK";
+  const journal = options.journalPath;
+
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const url = new URL(request.url);
+      const protocol: "openai" | "anthropic" = url.pathname.includes("/chat/completions")
+        ? "openai"
+        : url.pathname.includes("/messages")
+          ? "anthropic"
+          : "openai";
+      let body: any = {};
+      try {
+        body = await request.json();
+      } catch {
+        // no/invalid body — leave empty
+      }
+      const headers: Record<string, string> = {};
+      request.headers.forEach((value, key) => {
+        headers[key] = /auth/i.test(key) ? value.slice(0, 10) + "…redacted" : value;
+      });
+      const record: RecordedRequest = {
+        seq: seq++,
+        protocol,
+        url: url.pathname,
+        model: body.model,
+        stream: body.stream === true,
+        authPrefix: (request.headers.get("authorization") ?? request.headers.get("x-api-key") ?? "").slice(0, 8),
+        headers,
+        body,
+        at: Date.now(),
+      };
+      recorded.push(record);
+      if (journal) {
+        const existing = await Bun.file(journal).exists() ? await Bun.file(journal).text() : "";
+        await Bun.write(journal, existing + JSON.stringify(record) + "\n");
+      }
+
+      const kind = scenario.kind;
+      const s = scenario as any;
+
+      if (kind === "rate-limit") {
+        return Response.json(ANTHROPIC_1302, {
+          status: 429,
+          headers: { "retry-after": String(s.retryAfterSeconds ?? 0), "anthropic-ratelimit-unified-status": "rejected" },
+        });
+      }
+      if (kind === "unauthorized") {
+        return Response.json({ error: { message: "invalid api key", type: "401" } }, { status: 401 });
+      }
+      if (kind === "server-error") {
+        return Response.json({ error: { message: "internal error", type: "500" } }, { status: 500 });
+      }
+      if (kind === "malformed-sse") {
+        return new Response("this is not sse at all\n\n\0garbage", { headers: { "content-type": "text/event-stream" } });
+      }
+      if (kind === "cut-stream") {
+        // Aborted connection: stream starts, then the socket errors — this is
+        // the retryable "network reset" class, not a graceful end.
+        const enc = new TextEncoder();
+        const start = protocol === "anthropic"
+          ? `event: message_start\ndata: ${JSON.stringify({ type: "message_start", message: { id: "msg_mock", type: "message", role: "assistant", model: "mock", content: [], usage: { input_tokens: 5, output_tokens: 0 } } })}\n\nevent: content_block_start\ndata: ${JSON.stringify({ type: "content_block_start", index: 0, content_block: { type: "text", text: "" } })}\n\n`
+          : sseChunk("partial");
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(enc.encode(start));
+            setTimeout(() => controller.error(new Error("connection reset by peer")), 30);
+          },
+        });
+        return new Response(stream, { headers: { "content-type": "text/event-stream" } });
+      }
+
+      const text = kind === "success" && s.text !== undefined ? s.text : sentinel;
+      const chunks = kind === "success" && s.chunks !== undefined ? s.chunks : 3;
+      if (kind === "slow") {
+        await Bun.sleep(s.chunkDelayMs);
+      }
+      if (body.stream === true) {
+        return protocol === "anthropic" ? anthropicStream(text, chunks) : openAiStream(text, chunks);
+      }
+      return protocol === "anthropic" ? anthropicNonStream(text) : openAiNonStream(text);
+    },
+  });
+
+  return {
+    url: server.url.origin,
+    requests: () => recorded,
+    setScenario(s) {
+      scenario = s;
+    },
+    async close() {
+      server.stop(true);
+    },
+  };
+}

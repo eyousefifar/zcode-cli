@@ -3,7 +3,7 @@
 Unofficial standalone distribution of the **ZCode CLI** — the agent engine
 that ships inside the [ZCode desktop app](https://zcode.z.ai) — packaged as a
 single self-contained binary with [bun](https://bun.sh) `build --compile`, or
-as a thin npm package for existing node/bun installs.
+as a thin package that runs on bun.
 
 > ⚠️ **Unofficial.** This repository redistributes Z.ai's compiled CLI bundle
 > (`vendor/zcode.cjs`, ~11 MB, minified) unmodified apart from a documented
@@ -34,10 +34,10 @@ curl -fL https://github.com/eyousefifar/zcode-cli/releases/latest/download/zcode
 chmod +x /usr/local/bin/zcode
 ```
 
-### npm (thin package — runs on your node ≥ 22.5 or bun)
+### npm (thin package — runs on bun)
 
 ```bash
-npm install -g @eyousefifar/zcode-cli
+bun install -g @eyousefifar/zcode-cli
 # or one-shot:
 bunx @eyousefifar/zcode-cli -p "hello"
 ```
@@ -73,7 +73,7 @@ not shared or touched.
 zcode -p "explain this repo"                      # one-shot answer
 zcode -p "explain this repo" --json               # structured output + usage
 zcode -p "review diff.diff" --attach diff.diff    # attach files
-zcode -p "summarize" --mode plan                  # permission modes: build/edit/plan/yolo
+zcode -p "summarize" --mode build                  # permission modes: build/edit/yolo
 zcode -c -p "go on"                               # continue latest session
 zcode --resume sess_... -p "what did I ask?"      # resume by id
 zcode --target "fix the failing tests"            # autonomous goal run
@@ -96,7 +96,7 @@ bundle's environment assumptions, then load `vendor/zcode.cjs`:
 3. reuse the app's bundled ripgrep/bfs/ugrep when `/Applications/ZCode.app`
    exists
 4. normalize `process.argv` for bun's virtual filesystem and self-respawn
-   patterns
+   patterns (compiled binary only)
 5. shim `node:sea` at build time (absent in bun) with `isSea() = false`
 
 The bundle itself is unmodified.
@@ -115,7 +115,7 @@ The bundle itself is unmodified.
 
 - [kingsword09/zcode-cli](https://github.com/kingsword09/zcode-cli) — the
   interactive TUI (`@zcode/tui`) is their MIT-licensed work; their project is
-  also a full-featured npm-distributed alternative with a Node launcher.
+  also a full-featured npm-distributed alternative with their own launcher.
 
 ## Versioning
 
