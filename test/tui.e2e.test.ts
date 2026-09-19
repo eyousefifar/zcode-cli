@@ -99,6 +99,35 @@ describe("tui offline", () => {
     });
   }, 60_000);
 
+  test("/login suspends the UI, runs the login command, resumes (R1.7)", async () => {
+    // ZCODE_TUI_LOGIN_CMD overrides the external login program: the TUI must
+    // stop the UI (restoring terminal state), run the command with inherited
+    // stdio, then resume in place — all without losing the session.
+    const tui = await startTui(sandbox, {
+      args: ["tui"],
+      extraEnv: { ZCODE_TUI_LOGIN_CMD: "echo LOGIN-SUSPEND-MARKER-RAN" },
+    });
+    try {
+      await typeCommand(tui, "/login");
+      // The command's transient echo is wiped by pi-tui redraws; the durable
+      // signal is the post-login notice. Which notice appears depends on the
+      // provider fixture (access-configured vs not), but EITHER proves the
+      // suspend ran the command and resumed the UI.
+      const text = await tui.waitScreen(
+        "post-login notice",
+        (t) => t.includes("Model access configured") || t.includes("Login command finished"),
+        90_000,
+      );
+      expect(text).toMatch(/Model access configured|Login command finished/);
+      tui.type("/exit\r");
+      const deadline = Date.now() + 20_000;
+      while (Date.now() < deadline && tui.exitCode() === null) await Bun.sleep(50);
+      expect(tui.exitCode()).toBe(0);
+    } finally {
+      await tui.close();
+    }
+  }, 150_000);
+
   test("/exit terminates cleanly with code 0", async () => {
     const tui = await startTui(sandbox, { args: ["tui"] });
     tui.type("/exit\r");

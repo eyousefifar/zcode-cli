@@ -16,6 +16,8 @@ const DA1_QUERY = "\x1b[c";
 
 export class VirtualTerminal implements Terminal {
   readonly screen: TerminalScreen;
+  /** Verbatim writes (pre-ONLCR) — lets tests assert restore sequences like \x1b[?1049l. */
+  readonly rawWrites: string[] = [];
   #onInput?: (data: string) => void;
   #onResize?: () => void;
   #replied = new Set<string>();
@@ -58,6 +60,7 @@ export class VirtualTerminal implements Terminal {
 
   write(data: string): void {
     if (this.#closed) return;
+    this.rawWrites.push(data);
     // A real pty's termios ONLCR translates LF → CRLF before the emulator sees
     // it; pi-tui relies on that. Replicate it or every line drifts left.
     const translated = data.replace(/\r?\n/g, "\r\n");

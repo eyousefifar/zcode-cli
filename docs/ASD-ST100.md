@@ -127,13 +127,13 @@ violates or risks one of them:
 > and egress disclosed — then close the agent-loop test gap.
 
 ### R1 — P0/P1: "do not tag until done" (release integrity)
-- [ ] 1.1 CI on push/PR: offline gate (`bun test test/` + npm smoke) green on macOS runner (D1).
+- [x] 1.1 Done: `.github/workflows/ci.yml` — full offline gate on macos-14, pinned bun 1.4.2 + action SHAs; green run 35474497560 (2026-09-19). (D1)
 - [x] 1.2 Fixed: helper replay re-executes the binary in a guarded child (the workflow sandbox nulls `globalThis.process`, so in-process replay crashed after success); argv normalized to the node eval layout; event loop drains instead of a forced exit. Real-helper e2e: mock `tool_use` → Workflow tool → helper subprocess (D3).
 - [x] 1.3 Synthetic credentials: sandbox mints AES-GCM `enc:v1` records under a fixed test secret (both credential paths written); `installCredentials` removed from all tests/scripts; tier 3 green locally. CI verification rides 1.1.
 - [x] 1.4 Gate honesty: `RUN_PERF=0` default; absolute binary paths; test.sh tui case `timeout`+`</dev/null`+strict exit; perf self-validates (D8). *(acceptance: `bash scripts/gate.sh` passes with outbound network blocked — default run verified locally 2026-09-19; formal network-denied CI verification rides R1.1)*
-- [ ] 1.5 Release workflow: pin bun + Action SHAs; run gate; per-target smoke incl. darwin execute + tag/version assert; SHA256SUMS; README install verifies checksum (D2).
-- [ ] 1.6 Vendor provenance: `vendor/PROVENANCE.md` (extract recipe, app version, sync commit) + SHA256SUMS (D4).
-- [ ] 1.7 Crash-restore: `uncaughtException`/`unhandledRejection` → `ui.stop()` in fork; e2e asserts terminal state after `/login` suspend (D6).
+- [x] 1.5 Release workflow rewritten: gate job → per-target build matrix (darwin-arm64 native, darwin-x64 Rosetta, linux-x64 native, linux-arm64 qemu — every binary executed) → tag/version assert → SHA256SUMS → publish. `workflow_dispatch` dry-run without publish. README checksum note rides R4. (D2)
+- [x] 1.6 Done: `vendor/PROVENANCE.md` (origin table, local-modification list, verify command) + `vendor/SHA256SUMS` (verified locally). (D4)
+- [x] 1.7 Done: fork routes uncaught exceptions/rejections through `ui.stop()` (removed on run end so /login suspend cycles do not stack handlers); child-process crash fixture asserts restore sequences; pty e2e asserts `/login` suspend → command → resume. (D6)
 
 ### R2 — P1: truth about state and boundaries
 - [ ] 2.1 Session isolation: db/logs/settings follow `ZCODE_DATA_BASE_DIR` (or loud documented exception); settings merge-on-write + `wx` creation; npm homedir fallback; writability preflight (D5, D15).

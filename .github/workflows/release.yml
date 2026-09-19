@@ -1,3 +1,17 @@
+# Release pipeline (ASD-ST100 R1.5 / D2).
+#
+# Contract: a release artifact is only published if
+#   1. the full offline quality gate passed (job `gate`),
+#   2. every target binary was actually executed and printed the version
+#      matching the pushed tag — darwin-arm64 natively, darwin-x64 under
+#      Rosetta, linux-x64 natively, linux-arm64 under qemu,
+#   3. SHA256SUMS over all four binaries is generated and published with them.
+#
+# Bun and every action are pinned to exact commit SHAs (floating tags are a
+# supply-chain hole; see ASD-ST100 §3/M2). Bump pins deliberately.
+#
+# A tag push (v*) builds and publishes; workflow_dispatch runs the same
+# pipeline end-to-end but skips the publish step (dry run).
 name: release
 
 on:
@@ -9,29 +23,128 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  gate:
+    name: Offline quality gate
+    runs-on: macos-14
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: latest
+          bun-version: "1.4.2"
 
-      - name: Build all cross targets
-        run: bash scripts/build.sh all
+      - name: Offline gate (build + tier 1-3 tests + npm smoke)
+        run: |
+          set -o pipefail
+          bash scripts/gate.sh 2>&1 | tee gate.log
 
-      - name: Smoke test (native build runs)
-        if: runner.os == 'Linux'
-        run: ./dist/zcode-linux-x64 --version
+      - name: Upload gate logs on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-gate-logs-${{ github.run_id }}
+          path: |
+            gate.log
+            /tmp/zcode-test/
+          if-no-files-found: ignore
+          retention-days: 7
 
-      - name: Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+  build:
+    name: Build & execute ${{ matrix.target }}
+    needs: gate
+    timeout-minutes: 30
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            os: macos-14
+            smoke: native
+          - target: darwin-x64
+            os: macos-14
+            smoke: rosetta
+          - target: linux-x64
+            os: ubuntu-24.04
+            smoke: native
+          - target: linux-arm64
+            os: ubuntu-24.04
+            smoke: qemu
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Build cross target
+        run: bash scripts/build.sh bun-${{ matrix.target }}
+
+      - name: Assert binary version matches the tag
+        run: |
+          set -euo pipefail
+          # Only tag pushes carry a version contract; workflow_dispatch is a
+          # dry run (publish is also tag-gated).
+          case "${GITHUB_REF_NAME:-}" in
+            v*) want="${GITHUB_REF_NAME#v}" ;;
+            *) want="" ;;
+          esac
+          # darwin-x64 under Rosetta and linux-arm64 under qemu still execute
+          # the real binary here; version printing is part of the smoke.
+          case "${{ matrix.smoke }}" in
+            native) : ;;
+            rosetta) softwareupdate --install-rosetta --agree-to-license >/dev/null 2>&1 || true ;;
+            qemu) sudo apt-get -y update >/dev/null && sudo apt-get -y install qemu-user-static >/dev/null ;;
+          esac
+          binary="dist/zcode-${{ matrix.target }}"
+          chmod +x "$binary"
+          case "${{ matrix.smoke }}" in
+            native) got=$("$binary" --version) ;;
+            rosetta) got=$("$binary" --version) ;;
+            qemu) got=$(docker run --rm --platform linux/arm64 -v "$(pwd)/dist:/dist:ro" \
+                    ubuntu:22.04 /dist/zcode-${{ matrix.target }} --version) ;;
+          esac
+          echo "binary version: '$got' — expected: '$want'"
+          if [[ -n "$want" && "$got" != "$want" ]]; then
+            echo "::error::tag/version mismatch: binary '$got' != tag '$want'"
+            exit 1
+          fi
+
+      - name: Upload target artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zcode-${{ matrix.target }}
+          path: dist/zcode-${{ matrix.target }}
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    name: Checksum & publish
+    needs: build
+    runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: dist
+          pattern: zcode-*
+          merge-multiple: true
+
+      - name: Generate SHA256SUMS
+        run: |
+          cd dist
+          chmod +x zcode-*
+          sha256sum zcode-darwin-arm64 zcode-darwin-x64 zcode-linux-x64 zcode-linux-arm64 > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
             dist/zcode-darwin-arm64
             dist/zcode-darwin-x64
             dist/zcode-linux-x64
             dist/zcode-linux-arm64
+            dist/SHA256SUMS
           generate_release_notes: true

@@ -850,6 +850,31 @@ class ZCodeTui {
     process.once("SIGINT", onSigint);
     process.once("SIGTERM", onSigterm);
     if (process.platform !== "win32") process.once("SIGHUP", onSighup);
+    // [fork] D6 crash-restore: an async crash must not leave the terminal in
+    // alt-screen with mouse/bracketed-paste modes stuck. Route uncaught
+    // failures through the normal stop path (restores terminal state), then
+    // exit loudly. Removed in the finally below so a /login suspend cycle
+    // (run() → suspend → run()) never stacks duplicate handlers.
+    const onCrash = (origin: string) => (error: unknown): void => {
+      if (!this.stopped) {
+        try {
+          this.stop();
+        } catch {
+          // stop() already wraps its own cleanup steps.
+        }
+      }
+      const message = error instanceof Error ? error.stack ?? error.message : String(error);
+      try {
+        process.stderr.write(`zcode-tui: fatal ${origin}:\n${message}\n`);
+      } catch {
+        // stderr may be gone — nothing more we can do.
+      }
+      process.exit(1);
+    };
+    const onUncaughtException = onCrash("uncaughtException");
+    const onUnhandledRejection = onCrash("unhandledRejection");
+    process.on("uncaughtException", onUncaughtException);
+    process.on("unhandledRejection", onUnhandledRejection);
     let startAttempted = false;
     try {
       if (this.stopped) {
@@ -910,6 +935,8 @@ class ZCodeTui {
       process.off("SIGINT", onSigint);
       process.off("SIGTERM", onSigterm);
       if (process.platform !== "win32") process.off("SIGHUP", onSighup);
+      process.off("uncaughtException", onUncaughtException);
+      process.off("unhandledRejection", onUnhandledRejection);
       try {
         if (startAttempted && !this.stopped) {
           this.stop();
