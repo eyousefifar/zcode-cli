@@ -251,7 +251,46 @@ export async function startModelServer(options: StartOptions = {}): Promise<Mode
       const text = kind === "success" && s.text !== undefined ? s.text : sentinel;
       const chunks = kind === "success" && s.chunks !== undefined ? s.chunks : 3;
       if (kind === "slow") {
-        await Bun.sleep(s.chunkDelayMs);
+        // Genuinely slow: sleep between EVERY chunk so the turn stays
+        // in-flight for the whole stream (interrupt tests rely on this).
+        const delay = s.chunkDelayMs;
+        const parts: string[] = [];
+        const size = Math.ceil(text.length / chunks);
+        for (let i = 0; i < text.length; i += size) {
+          parts.push(sseChunk(text.slice(i, i + size)));
+        }
+        parts.push(`data: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: "stop" }], usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 } })}\n\n`);
+        parts.push(SSE_DONE);
+        const enc = new TextEncoder();
+        let idx = 0;
+        let closed = false;
+        const stream = new ReadableStream({
+          pull(controller) {
+            if (closed) return;
+            if (idx < parts.length) {
+              const chunk = parts[idx++]!;
+              return new Promise((resolve) => {
+                setTimeout(() => {
+                  // The client may disconnect mid-stream (interrupt tests):
+                  // never touch the controller after close/cancel.
+                  if (closed) { resolve(); return; }
+                  try {
+                    controller.enqueue(enc.encode(chunk));
+                  } catch {
+                    closed = true;
+                  }
+                  resolve();
+                }, delay);
+              });
+            }
+            closed = true;
+            controller.close();
+          },
+          cancel() {
+            closed = true;
+          },
+        });
+        return new Response(stream, { headers: { "content-type": "text/event-stream" } });
       }
       if (body.stream === true) {
         return protocol === "anthropic" ? anthropicStream(text, chunks) : openAiStream(text, chunks);

@@ -147,7 +147,7 @@ violates or risks one of them:
 
 ### R3 — P1: prove the agent loop
 - [x] 3.1 Mock server `tool_use` scenarios shipped (openai+anthropic, stream+non-stream); headless e2e: Workflow tool executes a real helper subprocess and the tool result round-trips. TUI e2e exposed **D22** (interactive runtime drops tool_use — no permission dialog reachable); current behavior pinned, real Allow/Deny tests blocked on D22. (D12, G1 partial: permission-dialog coverage waits on D22)
-- [ ] 3.2 T3 scenarios for high-traffic commands: `/model`, `/diff`, `/search`, rewind double-Esc, interrupt, exit summary; keybinding smoke (tab, shift+tab, ctrl+n); PARITY matrix updated to reference real tests (D12, D13).
+- [x] 3.2 T3 scenarios shipped (test/tui.e2e.test.ts "tui commands"): /model picker, /diff browser incl. clean-tree notice, /search usage, Ctrl+C interrupt of a per-chunk-slow stream (→ "Turn cancelled"), rewind double-Esc browser, exit token summary. PARITY references ride R4. (D12, D13)
 - [ ] 3.3 Dual-run golden harness fork-vs-vendor on the growing scenario set (G2).
 
 ### R4 — P2: docs re-baseline (rides along with R1/R2)

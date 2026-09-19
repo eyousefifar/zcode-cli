@@ -184,3 +184,99 @@ describe("tui agent loop", () => {
     }
   }, 150_000);
 });
+
+// Command/keybinding scenarios (R3.2): the high-traffic TUI surfaces, driven
+// through the real binary in a real pty.
+describe("tui commands", () => {
+  async function withTuiCmd(fn: (tui: TuiSession) => Promise<void>): Promise<void> {
+    const tui = await startTui(sandbox, { args: ["tui"] });
+    try {
+      await fn(tui);
+    } finally {
+      await tui.close();
+    }
+  }
+
+  test("/model opens the Select model picker and Esc closes it", async () => {
+    await withTuiCmd(async (tui) => {
+      await typeCommand(tui, "/model");
+      await tui.waitForText("Select model", 20_000);
+      expect(tui.screenText()).toContain("Current model:");
+      tui.type("\u001b");
+      await Bun.sleep(400);
+    });
+  }, 60_000);
+
+  test("/diff opens the diff browser; a clean tree reports clean", async () => {
+    await withTuiCmd(async (tui) => {
+      await typeCommand(tui, "/diff");
+      await tui.waitForText("Select current workspace changes", 20_000);
+      tui.type("\r"); // pick the first source (current workspace)
+      await tui.waitForText("Working tree is clean", 20_000);
+      tui.type("\u001b");
+      await Bun.sleep(400);
+    });
+  }, 60_000);
+
+  test("/search without arguments shows usage", async () => {
+    await withTuiCmd(async (tui) => {
+      await typeCommand(tui, "/search");
+      await tui.waitForText("Usage: /search", 20_000);
+      expect(tui.screenText()).toContain("/search <text>|next|prev|clear");
+    });
+  }, 60_000);
+
+  test("interrupt: Ctrl+C mid-turn cancels a slow streaming turn", async () => {
+    server.setScenario({ kind: "slow", chunkDelayMs: 1_000, chunks: 20 });
+    try {
+      await withTuiCmd(async (tui) => {
+        tui.type("Say hi\r");
+        // Wait until the slow stream has actually delivered content (the
+        // footer shows the model name from boot, so it proves nothing here).
+        await tui.waitForText("TUI-MOCKED", 60_000);
+        await Bun.sleep(800); // let beginTurn() finish registering the abort controller
+        tui.type("\u0003"); // Ctrl+C interrupts the active turn
+        await tui.waitForText("Turn cancelled", 30_000);
+      });
+    } finally {
+      server.setScenario({ kind: "success" });
+    }
+  }, 120_000);
+
+  test("exit summary reports session token usage", async () => {
+    const tui = await startTui(sandbox, { args: ["tui"] });
+    try {
+      tui.type("Say hi\r");
+      await tui.waitForText("mock/mock-model", 60_000);
+      tui.type("/exit\r");
+      const deadline = Date.now() + 20_000;
+      while (Date.now() < deadline && tui.exitCode() === null) await Bun.sleep(50);
+      expect(tui.exitCode()).toBe(0);
+      // The exit summary rides the raw output after the UI stops; poll for
+      // it (flush timing varies under load).
+      const deadline2 = Date.now() + 15_000;
+      let raw = tui.rawTail(4_000);
+      while (Date.now() < deadline2 && !/Token usage|total=\d+|session \d+ token/i.test(raw)) {
+        await Bun.sleep(200);
+        raw = tui.rawTail(4_000);
+      }
+      expect(raw).toMatch(/Token usage|total=\d+|session \d+ token/i);
+    } finally {
+      await tui.close();
+    }
+  }, 120_000);
+
+  test("rewind browser after a completed turn", async () => {
+    await withTuiCmd(async (tui) => {
+      tui.type("Say hi\r");
+      await tui.waitForText(SENTINEL, 90_000);
+      // Double-Esc opens the conversation rewind browser.
+      tui.type("\u001b");
+      await Bun.sleep(300);
+      tui.type("\u001b");
+      await tui.waitForBuffer("Rewind conversation", 20_000);
+      tui.type("\u001b");
+      await Bun.sleep(400);
+    });
+  }, 150_000);
+});
