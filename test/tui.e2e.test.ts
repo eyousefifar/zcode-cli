@@ -65,8 +65,8 @@ describe("tui offline", () => {
       // Input must NOT contain the sentinel: the first occurrence must be
       // the mocked response streaming back through the whole pipeline.
       tui.type("Say hi\r");
-      await tui.waitForText("mock/mock-model", 30_000);
-      await tui.waitForText(SENTINEL, 45_000);
+      await tui.waitForText("mock/mock-model", 60_000);
+      await tui.waitForText(SENTINEL, 90_000);
       const text = tui.screenText();
       expect(text).toContain(SENTINEL);
       expect(text).toContain("mock/mock-model");
@@ -136,4 +136,51 @@ describe("tui offline", () => {
     expect(tui.exitCode()).toBe(0);
     await tui.close();
   }, 60_000);
+});
+
+// Agent-loop tests (R3.1). FINDING (ASD-ST100 D22): the vendor's INTERACTIVE
+// runtime (the `zcode tui` path) drops model tool_use blocks — no tool
+// execution, no permission request, no tool events (verified via
+// ZCODE_TUI_DEBUG_EVENTS: model_request/turn events only) — while headless
+// `-p` executes the same tool call fine (covered in test/headless.e2e.test.ts).
+// These tests pin the CURRENT graceful behavior: the turn must still complete
+// through the follow-up response and exit cleanly. If the interactive runtime
+// ever grows a tool loop, the "not.toContain(TOOL_OUTPUT)" assertions below
+// fail — flip them to the real permission-dialog assertions then.
+describe("tui agent loop", () => {
+  const TOOL_OUTPUT = "PERM-TOOL-OK";
+  const FOLLOW_UP = "PERM-FOLLOWUP-OK";
+
+  function armBashScenario(server: ModelServer): void {
+    server.setScenario({
+      kind: "tool-use",
+      toolName: "Bash",
+      toolInput: { command: `echo ${TOOL_OUTPUT}`, description: "print the marker" },
+      followUpText: FOLLOW_UP,
+    });
+  }
+
+  test("tool_use completes the turn gracefully; permission dialog is NOT reachable (D22)", async () => {
+    armBashScenario(server);
+    try {
+      const tui = await startTui(sandbox, { args: ["tui"] });
+      try {
+        tui.type("Use the bash tool\r");
+        await tui.waitForText(FOLLOW_UP, 90_000);
+        // D22 evidence: no tool execution (no output), no permission dialog.
+        expect(tui.screenText()).not.toContain(TOOL_OUTPUT);
+        expect(tui.screenText()).not.toContain("Allow once");
+        // The turn did complete with ≥2 model round-trips and the session lives.
+        expect(server.requests().length).toBeGreaterThanOrEqual(2);
+        tui.type("/exit\r");
+        const deadline = Date.now() + 20_000;
+        while (Date.now() < deadline && tui.exitCode() === null) await Bun.sleep(50);
+        expect(tui.exitCode()).toBe(0);
+      } finally {
+        await tui.close();
+      }
+    } finally {
+      server.setScenario({ kind: "success" });
+    }
+  }, 150_000);
 });

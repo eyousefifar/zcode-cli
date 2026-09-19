@@ -89,6 +89,8 @@ violates or risks one of them:
 | D20 | P3 | Credential key derived from identifiers (platform:homedir:username); file perms are the real defense (upstream behavior, reproduced in tests) | `vendor/zcode.cjs:2115` | Long-term OS-keychain secret + migration; near-term document + perms |
 | D21 | P3 | Versioning: `package.json` version = core version; TUI fork version invisible — cannot ship TUI-only fixes meaningfully | `package.json:2`, `packages/tui/package.json` | Independent TUI version + release notes convention (part of D10 protocol work) |
 
+| D22 | P1 | **Interactive runtime drops tool_use**: in `zcode tui`, the vendor runtime silently discards model tool-call blocks — no tool execution, no permission request, no tool events (verified via `ZCODE_TUI_DEBUG_EVENTS`: only model_request/turn events fire) — while headless `-p` executes the identical tool call. A standalone TUI therefore cannot run the agent loop's tools at all; root cause sits in the proprietary bundle (suspect: interactive tool loop lives in the desktop engine). Current behavior pinned by a regression test; real fix candidates: app-server (ZCode Protocol) as the TUI runtime, or upstream guidance | `vendor/zcode.cjs` interactive turn runner; evidence in `test/tui.e2e.test.ts` agent-loop describe |
+
 ### 4.2 Gaps — what is left
 
 | ID | Gap | Plan |
@@ -144,7 +146,7 @@ violates or risks one of them:
 - [ ] 2.6 Out-of-checkout binary validation step in CI (G4).
 
 ### R3 — P1: prove the agent loop
-- [ ] 3.1 Mock server: anthropic `tool_use` scenarios (scheduled→started→result), permission-request flow; e2e: tool card renders, Allow/Deny works, `/activity` lists tasks (D12, G1).
+- [x] 3.1 Mock server `tool_use` scenarios shipped (openai+anthropic, stream+non-stream); headless e2e: Workflow tool executes a real helper subprocess and the tool result round-trips. TUI e2e exposed **D22** (interactive runtime drops tool_use — no permission dialog reachable); current behavior pinned, real Allow/Deny tests blocked on D22. (D12, G1 partial: permission-dialog coverage waits on D22)
 - [ ] 3.2 T3 scenarios for high-traffic commands: `/model`, `/diff`, `/search`, rewind double-Esc, interrupt, exit summary; keybinding smoke (tab, shift+tab, ctrl+n); PARITY matrix updated to reference real tests (D12, D13).
 - [ ] 3.3 Dual-run golden harness fork-vs-vendor on the growing scenario set (G2).
 

@@ -231,8 +231,10 @@ export async function startModelServer(options: StartOptions = {}): Promise<Mode
         return new Response("this is not sse at all\n\n\0garbage", { headers: { "content-type": "text/event-stream" } });
       }
       if (kind === "cut-stream") {
-        // Aborted connection: stream starts, then the socket errors — this is
-        // the retryable "network reset" class, not a graceful end.
+        // Premature end: the stream starts, then the connection drops without
+        // a terminal SSE chunk — the retryable "network reset" class. We close
+        // (not error) the stream deliberately: erroring would make bun log a
+        // server-side unhandled error that pollutes CI annotations.
         const enc = new TextEncoder();
         const start = protocol === "anthropic"
           ? `event: message_start\ndata: ${JSON.stringify({ type: "message_start", message: { id: "msg_mock", type: "message", role: "assistant", model: "mock", content: [], usage: { input_tokens: 5, output_tokens: 0 } } })}\n\nevent: content_block_start\ndata: ${JSON.stringify({ type: "content_block_start", index: 0, content_block: { type: "text", text: "" } })}\n\n`
@@ -240,7 +242,7 @@ export async function startModelServer(options: StartOptions = {}): Promise<Mode
         const stream = new ReadableStream({
           start(controller) {
             controller.enqueue(enc.encode(start));
-            setTimeout(() => controller.error(new Error("connection reset by peer")), 30);
+            setTimeout(() => controller.close(), 30);
           },
         });
         return new Response(stream, { headers: { "content-type": "text/event-stream" } });
