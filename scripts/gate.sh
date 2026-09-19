@@ -34,16 +34,16 @@ fi
 
 step "legacy flag matrix (real API, small quota)"
 if [[ "${RUN_ONLINE:-0}" == "1" ]]; then
-  bash scripts/test.sh dist/zcode || FAIL=1
+  bash scripts/test.sh "$(pwd)/dist/zcode" || FAIL=1
 else
   echo "skipped (set RUN_ONLINE=1 to include)"
 fi
 
-step "performance baseline (startup median, sample)"
-if [[ "${RUN_PERF:-1}" == "1" ]]; then
-  bash scripts/perf.sh dist/zcode || FAIL=1
+step "performance baseline (startup median, sample) — ONLINE: real API"
+if [[ "${RUN_PERF:-0}" == "1" ]]; then
+  bash scripts/perf.sh "$(pwd)/dist/zcode" || FAIL=1
 else
-  echo "skipped (RUN_PERF=0 to exclude)"
+  echo "skipped by default (perf makes real authenticated API calls; set RUN_PERF=1)"
 fi
 
 echo

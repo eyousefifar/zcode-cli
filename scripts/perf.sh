@@ -3,15 +3,24 @@
 #
 #   bash scripts/perf.sh [path-to-binary]
 #
+# ONLINE by design: turn-latency and CPU-sample sections call the real API with
+# the developer's credentials. The gate keeps this behind RUN_PERF=1.
 # Measures: startup latency (--version, 10 runs), peak RSS, short headless
 # turn latency, and a macOS `sample` CPU call-tree during a live turn.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+if [[ "$(uname)" != "Darwin" ]]; then
+  echo "perf.sh: macOS-only tooling (/usr/bin/time -l, sample) — refusing to produce garbage measurements on $(uname)."
+  exit 1
+fi
+
 Z="${1:-dist/zcode}"
+[[ -x "$Z" ]] || { echo "perf.sh: binary not executable: $Z"; exit 1; }
 OUT=/tmp/zcode-perf
 rm -rf "$OUT"; mkdir -p "$OUT"
 
+fail=0
 echo "== binary: $Z"
 stat -f "size: %z bytes" "$Z"
 
@@ -22,6 +31,7 @@ for i in $(seq 1 10); do
   echo " [run $i]" >> "$OUT/startup.txt"
 done
 grep -oE "[0-9]+\.[0-9]+ real" "$OUT/startup.txt" | grep -oE "[0-9]+\.[0-9]+" > "$OUT/startup_seconds.txt"
+[[ -s "$OUT/startup_seconds.txt" ]] || { echo "perf.sh: no startup measurements produced"; fail=1; }
 median=$(sort -n "$OUT/startup_seconds.txt" | awk '{a[NR]=$1} END {if (NR%2) print a[int(NR/2)+1]; else print (a[int(NR/2)]+a[int(NR/2)+1])/2}')
 echo "startup real (s): median=$median min=$(sort -n "$OUT/startup_seconds.txt" | head -1) max=$(sort -n "$OUT/startup_seconds.txt" | tail -1)"
 peakrss=$(grep -oE "maximum resident set size [0-9]+" "$OUT/startup.txt" | grep -oE "[0-9]+$" | sort -n | tail -1)
@@ -51,3 +61,4 @@ else
 fi
 
 echo "== results in $OUT =="
+if [[ $fail -ne 0 ]]; then echo "perf.sh: FAILED (missing measurements above)"; exit 1; fi

@@ -6,19 +6,28 @@
 set -uo pipefail
 
 Z="${1:-$HOME/.local/bin/zcode}"
+# The runners cd into $OUT/work before executing: a relative binary path would
+# resolve inside the temp dir. Always run the caller's absolute path.
+[[ "$Z" = /* ]] || Z="$(pwd)/$Z"
 OUT=/tmp/zcode-test
 rm -rf "$OUT"; mkdir -p "$OUT/work"
 PASS=0; FAIL=0; NOTES=()
+
+# macOS ships no coreutils `timeout`; perl's alarm is everywhere.
+with_timeout() { # seconds command...
+  perl -e 'alarm shift @ARGV; exec @ARGV or die "exec: $!\n"' "$@"
+}
 
 run_case() { # name expected_exit_pattern command...
   local name="$1"; shift
   local check="$1"; shift
   local log="$OUT/$(echo "$name" | tr ' /' '__').log"
   local rc=0
-  ( cd "$OUT/work" && "$@" ) >"$log" 2>&1 || rc=$?
+  ( cd "$OUT/work" && with_timeout 60 "$@" ) >"$log" 2>&1 </dev/null || rc=$?
   local ok="FAIL"
   if [[ "$check" == "exit0" && $rc -eq 0 ]] || [[ "$check" == "any" ]]; then ok="PASS"; fi
   if [[ "$check" == exit0 && $rc -ne 0 ]]; then ok="FAIL"; fi
+  if [[ "$check" == "any" && $rc -eq 124 ]]; then ok="FAIL"; NOTES+=("$name timed out"); fi
   if [[ "$ok" == PASS ]]; then PASS=$((PASS+1)); else FAIL=$((FAIL+1)); fi
   printf '%-42s %-4s (exit %s)\n' "$name" "$ok" "$rc"
 }
@@ -27,7 +36,7 @@ api_case() { # name command... — expects clean JSON with .response
   local name="$1"; shift
   local log="$OUT/$(echo "$name" | tr ' /' '__').log"
   local rc=0
-  ( cd "$OUT/work" && "$@" ) >"$log" 2>&1 || rc=$?
+  ( cd "$OUT/work" && with_timeout 120 "$@" ) >"$log" 2>&1 </dev/null || rc=$?
   if [[ $rc -eq 0 ]] && jq -e '.response' "$log" >/dev/null 2>&1; then
     PASS=$((PASS+1)); printf '%-42s PASS (exit 0, valid response)\n' "$name"
   else
@@ -40,7 +49,7 @@ text_case() { # name expected_substring command... — plain-text mode
   local want="$1"; shift
   local log="$OUT/$(echo "$name" | tr ' /' '__').log"
   local rc=0
-  ( cd "$OUT/work" && "$@" ) >"$log" 2>&1 || rc=$?
+  ( cd "$OUT/work" && with_timeout 120 "$@" ) >"$log" 2>&1 </dev/null || rc=$?
   if [[ $rc -eq 0 ]] && grep -qi "$want" "$log"; then
     PASS=$((PASS+1)); printf '%-42s PASS (exit 0, reply ok)\n' "$name"
   else
@@ -55,7 +64,7 @@ run_case "doctor"               exit0 "$Z" doctor
 run_case "skills list"          exit0 "$Z" skills list
 run_case "commands list"        exit0 "$Z" commands list
 run_case "plugins list"         exit0 "$Z" plugins list
-run_case "tui (stub)"           any     "$Z" tui
+run_case "tui (no tty → refuses)" any "$Z" tui
 text_case "-p --prepare-storage" "ok"   "$Z" -p "Reply with exactly: ok" --prepare-storage
 
 echo "-- API cases --"
@@ -82,7 +91,7 @@ api_case "-p --disallowed-tools"  "$Z" -p "Reply with exactly: ok" --disallowed-
 # with -p. See docs/OPTIONS.md.
 
 echo "-- session continuity --"
-SID=$( (cd "$OUT/work" && "$Z" -p "Remember the word BANANA. Reply ok." --json 2>/dev/null | jq -r '.sessionId // empty') )
+SID=$( (cd "$OUT/work" && with_timeout 120 "$Z" -p "Remember the word BANANA. Reply ok." --json </dev/null 2>/dev/null | jq -r '.sessionId // empty') )
 if [[ -n "${SID:-}" ]]; then
   PASS=$((PASS+1)); printf '%-42s PASS (session %s)\n' "resume: got sessionId" "${SID:0:13}..."
   api_case "--resume <id>"  "$Z" --resume "$SID" -p "What word did I ask you to remember? Reply with only that word." --json
@@ -92,5 +101,6 @@ fi
 api_case "-c (continue latest)"   "$Z" -c -p "Reply with exactly: ok" --json
 
 echo
+if (( ${#NOTES[@]} )); then printf '! %s\n' "${NOTES[@]}"; fi
 echo "== RESULT: $PASS passed, $FAIL failed (details in $OUT)"
 [[ $FAIL -eq 0 ]]
