@@ -5,7 +5,7 @@ import { startTui } from "../test/helpers/tui-session.ts";
 
 const sandbox = await createSandbox();
 const server = await startModelServer({ sentinel: "X" });
-await sandbox.installCredentials();
+await sandbox.installSyntheticCredentials();
 await sandbox.writeProviderFixture({ baseUrl: server.url });
 await sandbox.writeAccountSelection();
 

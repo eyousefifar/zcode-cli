@@ -128,8 +128,8 @@ violates or risks one of them:
 
 ### R1 — P0/P1: "do not tag until done" (release integrity)
 - [ ] 1.1 CI on push/PR: offline gate (`bun test test/` + npm smoke) green on macOS runner (D1).
-- [ ] 1.2 Fix eval-replay lifecycle (private `process`, argv normalization, event-loop drain) + e2e that triggers a real helper workflow (D3).
-- [ ] 1.3 Synthetic credential fixture replaces `installCredentials`; tier 3 green on a clean runner; verify in CI (D8).
+- [x] 1.2 Fixed: helper replay re-executes the binary in a guarded child (the workflow sandbox nulls `globalThis.process`, so in-process replay crashed after success); argv normalized to the node eval layout; event loop drains instead of a forced exit. Real-helper e2e: mock `tool_use` → Workflow tool → helper subprocess (D3).
+- [x] 1.3 Synthetic credentials: sandbox mints AES-GCM `enc:v1` records under a fixed test secret (both credential paths written); `installCredentials` removed from all tests/scripts; tier 3 green locally. CI verification rides 1.1.
 - [x] 1.4 Gate honesty: `RUN_PERF=0` default; absolute binary paths; test.sh tui case `timeout`+`</dev/null`+strict exit; perf self-validates (D8). *(acceptance: `bash scripts/gate.sh` passes with outbound network blocked — default run verified locally 2026-09-19; formal network-denied CI verification rides R1.1)*
 - [ ] 1.5 Release workflow: pin bun + Action SHAs; run gate; per-target smoke incl. darwin execute + tag/version assert; SHA256SUMS; README install verifies checksum (D2).
 - [ ] 1.6 Vendor provenance: `vendor/PROVENANCE.md` (extract recipe, app version, sync commit) + SHA256SUMS (D4).

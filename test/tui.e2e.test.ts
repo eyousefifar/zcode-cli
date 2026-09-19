@@ -14,9 +14,10 @@ const SENTINEL = "TUI-MOCKED-RESPONSE-OK";
 beforeAll(async () => {
   sandbox = await createSandbox();
   server = await startModelServer({ sentinel: SENTINEL });
-  // The TUI login gate requires standalone coding-plan state: the machine's
-  // encrypted login credentials plus an account-provider selection.
-  await sandbox.installCredentials();
+  // The TUI login gate requires standalone coding-plan state: synthetic
+  // credentials (fabricated, fixed test secret — never the developer's real
+  // login) plus an account-provider selection.
+  await sandbox.installSyntheticCredentials();
   await sandbox.writeProviderFixture({ baseUrl: `${server.url}` });
   await sandbox.writeAccountSelection();
 }, 30_000);

@@ -16,8 +16,13 @@
 //    marker (/$bunfs/root/...), which we strip so it isn't parsed as a
 //    positional.
 // 4. The bundle occasionally spawns `node --input-type=module --eval <code>
-//    [-- <payload>]` helpers. There is no standalone node inside the binary,
-//    so these are replayed in-process via a data: import.
+//    [-- <payload>]` helpers (workflow meta evaluation, workflow runs).
+//    There is no standalone node inside the binary, so these are replayed.
+//    The workflow runner shim hardens its environment by nulling
+//    globalThis.process (non-configurable) and replacing Date/Math.random —
+//    poisoning that would kill our own process if the shim ran in it. So the
+//    helper is replayed in a guarded child copy of this binary (clean
+//    globals, real event-loop drain semantics), never in-process.
 // 5. Data-dir isolation: state lives in ~/.zcode-standalone by default.
 //    Note the runtime still hardwires the session DB, logs and the CLI
 //    settings file to $HOME/.zcode/cli, so isolation covers the
@@ -31,6 +36,15 @@ import builtinProviderConfig from "../vendor/zcode-builtin.json" with { type: "f
 import defaultCliSettings from "../vendor/cli-settings-default.json" with { type: "file" };
 
 const BUNFS = "/$bunfs/root/";
+
+// Marker for the helper-replay child (see pass 1/pass 2 below). Chosen to
+// never collide with a real CLI argument.
+const EVAL_REPLAY_CHILD = "--zcode-eval-replay-child";
+
+// A process reference captured before any replayed module can poison
+// globalThis. The workflow shim nulls the global with configurable:false —
+// after that, only this private ref reaches the real process.
+const realProcess = globalThis.process;
 
 // Minimal environments (cron, CI) lack USER; parts of the runtime's
 // credential/provider layer need a username to be resolvable. Empirically
@@ -59,59 +73,91 @@ if (process.argv[2]?.startsWith(BUNFS)) {
   process.argv.splice(2, 1);
 }
 
-// `node --input-type=module --eval <code> [-- <payload>]` helper rewrites,
-// replayed in-process. The child argv layout is [bin, bunfs-entry,
-// "--input-type=module", "--eval", <code>, ...].
-if (process.argv[2] === "--input-type=module" && process.argv[3] === "--eval") {
-  const code = process.argv[4] ?? "";
+// `node --input-type=module --eval <code> [-- <payload>]` helper replay.
+// The child argv layout is [bin, bunfs-entry, "--input-type=module",
+// "--eval", <code>, "--", <payload>...].
+//
+// Pass 1 (spawned by the vendor): re-exec this binary with the replay
+// marker. The workflow shim nulls globalThis.process and replaces
+// Date/Math.random non-restorably, so the module must run in a fresh
+// process, not ours; stdin/stdout/stderr stay inherited so the vendor's
+// pipes keep working.
+if (realProcess.argv[2] === "--input-type=module" && realProcess.argv[3] === "--eval") {
+  const child = Bun.spawn(
+    [realProcess.execPath, EVAL_REPLAY_CHILD, ...realProcess.argv.slice(2)],
+    { stdin: "inherit", stdout: "inherit", stderr: "inherit" },
+  );
+  realProcess.exit(await child.exited);
+}
+
+// Pass 2 (the guarded child): normalize argv to the node eval layout —
+// [execPath, "[eval]", "--", <payload>...] — import the module, then let the
+// event loop drain: the shim never exits itself (process is gone by design)
+// and pending timers/stream writes must complete before the process exits.
+// Control must not fall through to the vendor import below, hence the else.
+if (realProcess.argv[2] === EVAL_REPLAY_CHILD) {
+  const argv = realProcess.argv;
+  // [bin, bunfs-entry, MARKER, "--input-type=module", "--eval", <code>, ...]
+  const code = argv[5] ?? "";
+  const payloadStart = argv.indexOf("--", 6);
+  const payload = payloadStart === -1 ? [] : argv.slice(payloadStart);
+  argv.splice(2, 1); // drop the marker
+  realProcess.argv = [realProcess.execPath, "[eval]", ...payload];
   try {
     await import("data:application/javascript;base64," + Buffer.from(code).toString("base64"));
-    process.exit(process.exitCode ?? 0);
+    realProcess.exitCode ??= 0;
+    // Falling out of the if/else ends module evaluation; bun then drains the
+    // loop and exits with exitCode. A module that leaves a repeating timer
+    // keeps the process alive — same as `node --eval`.
   } catch (err) {
     console.error(err);
-    process.exit(1);
+    realProcess.exit(1);
   }
+} else {
+  await startCli();
 }
 
-// Isolated state dir — see the note in the header: the credential/model
-// store is isolated; the session DB and logs stay under $HOME/.zcode/cli
-// because the runtime hardwires them there.
-if (!process.env.ZCODE_DATA_BASE_DIR) {
-  process.env.ZCODE_DATA_BASE_DIR = join(home, ".zcode-standalone");
-}
-
-// Mirror upstream's `ensureCliSettings`: create the CLI settings file at its
-// designed location ($HOME/.zcode/cli/setting.json — the same file the
-// desktop app's CLI engine and the bundled TUI read) if absent.
-try {
-  const cliDir = join(home, ".zcode", "cli");
-  const cliSettingsPath = join(cliDir, "setting.json");
-  if (!existsSync(cliSettingsPath)) {
-    mkdirSync(cliDir, { recursive: true, mode: 0o700 });
-    writeFileSync(cliSettingsPath, readFileSync(defaultCliSettings, "utf8"), { mode: 0o600 });
+async function startCli(): Promise<void> {
+  // Isolated state dir — see the note in the header: the credential/model
+  // store is isolated; the session DB and logs stay under $HOME/.zcode/cli
+  // because the runtime hardwires them there.
+  if (!process.env.ZCODE_DATA_BASE_DIR) {
+    process.env.ZCODE_DATA_BASE_DIR = join(home, ".zcode-standalone");
   }
-} catch {
-  // best effort — the runtime tolerates a missing file
-}
 
-// The vendored TUI (kingsword09/zcode-cli) checks npm for zcode-app-cli
-// updates; this distribution isn't that package, so default the check off.
-process.env.ZCODE_DISABLE_UPDATE_CHECK ??= "1";
-
-if (!process.env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE && existsSync(builtinProviderConfig)) {
-  process.env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE = builtinProviderConfig;
-}
-
-const appResources = "/Applications/ZCode.app/Contents/Resources";
-const bundledTools: Array<[string, string]> = [
-  ["ZCODE_RG_BINARY", join(appResources, "tools/ripgrep/rg")],
-  ["ZCODE_BFS_BINARY", join(appResources, "tools/bfs/bfs")],
-  ["ZCODE_UGREP_BINARY", join(appResources, "tools/ugrep/ugrep")],
-];
-for (const [envVar, toolPath] of bundledTools) {
-  if (!process.env[envVar] && existsSync(toolPath)) {
-    process.env[envVar] = toolPath;
+  // Mirror upstream's `ensureCliSettings`: create the CLI settings file at its
+  // designed location ($HOME/.zcode/cli/setting.json — the same file the
+  // desktop app's CLI engine and the bundled TUI read) if absent.
+  try {
+    const cliDir = join(home, ".zcode", "cli");
+    const cliSettingsPath = join(cliDir, "setting.json");
+    if (!existsSync(cliSettingsPath)) {
+      mkdirSync(cliDir, { recursive: true, mode: 0o700 });
+      writeFileSync(cliSettingsPath, readFileSync(defaultCliSettings, "utf8"), { mode: 0o600 });
+    }
+  } catch {
+    // best effort — the runtime tolerates a missing file
   }
-}
 
-await import("../vendor/zcode.cjs");
+  // The vendored TUI (kingsword09/zcode-cli) checks npm for zcode-app-cli
+  // updates; this distribution isn't that package, so default the check off.
+  process.env.ZCODE_DISABLE_UPDATE_CHECK ??= "1";
+
+  if (!process.env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE && existsSync(builtinProviderConfig)) {
+    process.env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE = builtinProviderConfig;
+  }
+
+  const appResources = "/Applications/ZCode.app/Contents/Resources";
+  const bundledTools: Array<[string, string]> = [
+    ["ZCODE_RG_BINARY", join(appResources, "tools/ripgrep/rg")],
+    ["ZCODE_BFS_BINARY", join(appResources, "tools/bfs/bfs")],
+    ["ZCODE_UGREP_BINARY", join(appResources, "tools/ugrep/ugrep")],
+  ];
+  for (const [envVar, toolPath] of bundledTools) {
+    if (!process.env[envVar] && existsSync(toolPath)) {
+      process.env[envVar] = toolPath;
+    }
+  }
+
+  await import("../vendor/zcode.cjs");
+}

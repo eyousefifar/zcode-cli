@@ -1,0 +1,53 @@
+# CI (ASD-ST100 R1.1 / D1): every push to main and every PR runs the full
+# offline quality gate on a clean macOS arm64 runner — the same machine class
+# as the native release target.
+#
+# "Offline" means: build + 44-test suite (tiers 1-3) + npm-entry smoke, with
+# no authenticated API calls. The e2e tier runs against a local mock model
+# server with synthetic credentials (test/helpers/sandbox.ts) — a fresh
+# runner needs no login state. The online matrix (scripts/test.sh) and the
+# perf baseline stay opt-in locally (RUN_ONLINE=1 / RUN_PERF=1) because they
+# consume real plan quota.
+#
+# Action SHAs are pinned to exact commits (supply-chain rule, ASD-ST100 §3/M2);
+# bump the comment tag deliberately, never a floating branch.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Offline quality gate (macOS arm64)
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install bun (pinned)
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: "1.4.2"
+
+      - name: Offline gate (build + tier 1-3 tests + npm smoke)
+        run: |
+          set -o pipefail
+          bash scripts/gate.sh 2>&1 | tee gate.log
+
+      - name: Upload gate logs on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gate-logs-${{ github.run_id }}
+          path: |
+            gate.log
+            /tmp/zcode-test/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -26,7 +26,14 @@ export type Scenario =
   | { kind: "server-error" }
   | { kind: "malformed-sse" }
   | { kind: "cut-stream"; afterChunks?: number }
-  | { kind: "slow"; chunkDelayMs: number; chunks?: number };
+  | { kind: "slow"; chunkDelayMs: number; chunks?: number }
+  | {
+      kind: "tool-use";
+      /** First turn returns this tool call; every later turn returns followUpText. */
+      toolName: string;
+      toolInput: Record<string, unknown>;
+      followUpText: string;
+    };
 
 export interface ModelServer {
   url: string;
@@ -96,9 +103,69 @@ function anthropicStream(text: string, chunks = 3) {
   return new Response(parts.join(""), { headers: { "content-type": "text/event-stream" } });
 }
 
+// --- tool_use responses -----------------------------------------------------
+// The runtime must issue the tool call, execute the tool, and send the result
+// back as a follow-up turn (where the mock replies with followUpText).
+
+const TOOL_CALL_ID = "call_mock_1";
+
+function toolUseResponse(
+  protocol: "openai" | "anthropic",
+  stream: boolean,
+  toolName: string,
+  toolInput: Record<string, unknown>,
+  followUpText: string,
+  firstTurn: boolean,
+): Response {
+  if (!firstTurn) {
+    // Follow-up turn (carries the tool result): plain final text.
+    return stream
+      ? (protocol === "anthropic" ? anthropicStream(followUpText) : openAiStream(followUpText))
+      : (protocol === "anthropic" ? anthropicNonStream(followUpText) : openAiNonStream(followUpText));
+  }
+  if (protocol === "openai") {
+    const toolCall = { index: 0, id: TOOL_CALL_ID, type: "function", function: { name: toolName, arguments: JSON.stringify(toolInput) } };
+    if (stream) {
+      const parts = [
+        `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: "assistant", tool_calls: [toolCall] }, finish_reason: null }] })}\n\n`,
+        `data: ${JSON.stringify({ choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }] })}\n\n`,
+        SSE_DONE,
+      ];
+      return new Response(parts.join(""), { headers: { "content-type": "text/event-stream" } });
+    }
+    return Response.json({
+      id: "chatcmpl-mock", object: "chat.completion", created: 1, model: "mock",
+      choices: [{ index: 0, message: { role: "assistant", content: null, tool_calls: [toolCall] }, finish_reason: "tool_calls" }],
+      usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+    });
+  }
+  // anthropic
+  if (stream) {
+    const json = JSON.stringify(toolInput);
+    const parts = [
+      `event: message_start\ndata: ${JSON.stringify({ type: "message_start", message: { id: "msg_mock", type: "message", role: "assistant", model: "mock", content: [], usage: { input_tokens: 10, output_tokens: 0 } } })}\n\n`,
+      `event: content_block_start\ndata: ${JSON.stringify({ type: "content_block_start", index: 0, content_block: { type: "tool_use", id: TOOL_CALL_ID, name: toolName, input: {} } })}\n\n`,
+      `event: content_block_delta\ndata: ${JSON.stringify({ type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: json } })}\n\n`,
+      `event: content_block_stop\ndata: ${JSON.stringify({ type: "content_block_stop", index: 0 })}\n\n`,
+      `event: message_delta\ndata: ${JSON.stringify({ type: "message_delta", delta: { stop_reason: "tool_use" }, usage: { output_tokens: 5 } })}\n\n`,
+      `event: message_stop\ndata: ${JSON.stringify({ type: "message_stop" })}\n\n`,
+    ];
+    return new Response(parts.join(""), { headers: { "content-type": "text/event-stream" } });
+  }
+  return Response.json({
+    id: "msg_mock", type: "message", role: "assistant", model: "mock",
+    content: [{ type: "tool_use", id: TOOL_CALL_ID, name: toolName, input: toolInput }],
+    stop_reason: "tool_use",
+    usage: { input_tokens: 10, output_tokens: 5 },
+  });
+}
+
 export async function startModelServer(options: StartOptions = {}): Promise<ModelServer> {
   let scenario: Scenario = options.scenario ?? { kind: "success" };
   let seq = 0;
+  // tool-use scenario: the first request after setScenario gets the tool call,
+  // every later request gets followUpText.
+  let toolUseServed = false;
   const recorded: RecordedRequest[] = [];
   const sentinel = options.sentinel ?? "MOCKED-RESPONSE-OK";
   const journal = options.journalPath;
@@ -143,6 +210,11 @@ export async function startModelServer(options: StartOptions = {}): Promise<Mode
       const kind = scenario.kind;
       const s = scenario as any;
 
+      if (kind === "tool-use") {
+        const first = !toolUseServed;
+        toolUseServed = true;
+        return toolUseResponse(protocol, body.stream === true, s.toolName, s.toolInput, s.followUpText, first);
+      }
       if (kind === "rate-limit") {
         return Response.json(ANTHROPIC_1302, {
           status: 429,
@@ -191,6 +263,7 @@ export async function startModelServer(options: StartOptions = {}): Promise<Mode
     requests: () => recorded,
     setScenario(s) {
       scenario = s;
+      if (s.kind === "tool-use") toolUseServed = false;
     },
     async close() {
       server.stop(true);

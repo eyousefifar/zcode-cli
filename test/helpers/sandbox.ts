@@ -2,10 +2,48 @@
 // its own HOME, its own data dir, a provider fixture pointing at a local
 // mock model server, and a minimal env (no leakage from the parent shell).
 
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
+
+// The runtime encrypts every credential-store value as
+// "enc:v1:" base64url(iv) "." base64url(tag) "." base64url(ciphertext)
+// with aes-256-gcm keyed by sha256(ZCODE_CREDENTIAL_SECRET). The sandbox
+// mints its own synthetic credentials under a fixed test secret, so no test
+// ever touches the developer's real login state (D8/R1.3).
+const TEST_CREDENTIAL_SECRET = "zcode-test-credential-secret";
+
+function encryptCredentialValue(plain: string): string {
+  const key = createHash("sha256").update(TEST_CREDENTIAL_SECRET).digest();
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([cipher.update(plain, "utf-8"), cipher.final()]);
+  return [
+    "enc:v1:",
+    iv.toString("base64url"),
+    ".",
+    cipher.getAuthTag().toString("base64url"),
+    ".",
+    ciphertext.toString("base64url"),
+  ].join("");
+}
+
+// JWT-shaped token with a far-future expiry. The runtime never verifies the
+// signature locally (the mock server ignores auth), but expiry checks parse
+// the payload — so exp must be real and in the future.
+function syntheticJwt(): string {
+  const b64 = (obj: unknown) => Buffer.from(JSON.stringify(obj)).toString("base64url");
+  const header = b64({ alg: "HS256", typ: "JWT" });
+  const payload = b64({
+    sub: "sandbox-tester",
+    exp: Math.floor(Date.now() / 1000) + 365 * 24 * 3600,
+    iat: Math.floor(Date.now() / 1000),
+  });
+  const signature = Buffer.from("synthetic-signature-not-verified").toString("base64url");
+  return `${header}.${payload}.${signature}`;
+}
 
 export interface Sandbox {
   home: string;
@@ -14,7 +52,7 @@ export interface Sandbox {
   binary: string;
   env(): Record<string, string>;
   writeProviderFixture(options?: { providerId?: string; modelId?: string; baseUrl?: string; apiKey?: string; apiType?: string; models?: string[] }): Promise<void>;
-  installCredentials(sourcePath?: string): Promise<void>;
+  installSyntheticCredentials(): Promise<void>;
   writeAccountSelection(providerId?: string, modelId?: string): Promise<void>;
   dispose(): Promise<void>;
 }
@@ -50,9 +88,8 @@ export async function createSandbox(): Promise<Sandbox> {
         ZCODE_DISABLE_UPDATE_CHECK: "1",
       };
       if (this.credentialsInstalled) {
-        // Copied credentials were encrypted under the real machine's
-        // derived secret (platform:homedir:username); reproduce it here.
-        base.ZCODE_CREDENTIAL_SECRET = `zcode-credential-fallback:${process.platform}:${process.env.HOME}:${process.env.USER || "tester"}`;
+        // Synthetic credentials were encrypted under the fixed test secret.
+        base.ZCODE_CREDENTIAL_SECRET = TEST_CREDENTIAL_SECRET;
       }
       return base;
     },
@@ -106,12 +143,34 @@ export async function createSandbox(): Promise<Sandbox> {
     async dispose() {
       await Bun.$`rm -rf ${home}`.quiet();
     },
-    async installCredentials(sourcePath = join(process.env.HOME!, ".zcode-standalone", ".zcode", "v2", "credentials.json")) {
-      // Copy the machine's own encrypted standalone-login state so the TUI's
-      // coding-plan gate passes. Values are AES-GCM encrypted with a
-      // machine-derived key and never leave this machine.
-      await mkdir(join(home, ".zcode", "v2"), { recursive: true });
-      await Bun.write(join(home, ".zcode", "v2", "credentials.json"), await Bun.file(sourcePath).text());
+    async installCredentials() {
+      throw new Error(
+        "installCredentials() was removed: offline tests must not read the developer's real login state. " +
+        "Use installSyntheticCredentials().",
+      );
+    },
+    async installSyntheticCredentials() {
+      // A synthetic standalone "zai" coding-plan login, valid enough for the
+      // TUI login gate and the mock-model pipeline. Values are fabricated;
+      // the encryption scheme is the runtime's own (verified by decrypting
+      // through the binary in the e2e suite).
+      const record: Record<string, string> = {
+        "oauth:active_provider": encryptCredentialValue("zai"),
+        "oauth:zai:access_token": encryptCredentialValue("synthetic-access-token"),
+        "oauth:zai:refresh_token": encryptCredentialValue("synthetic-refresh-token"),
+        "oauth:zai:user_info": encryptCredentialValue(JSON.stringify({
+          id: "sandbox-user",
+          name: "Sandbox Tester",
+          email: "sandbox@example.invalid",
+        })),
+        zcodejwttoken: encryptCredentialValue(syntheticJwt()),
+      };
+      // Two readers exist: one rooted at $HOME/.zcode, one at
+      // $ZCODE_DATA_BASE_DIR/.zcode (codex finding: they disagree). Write both.
+      for (const base of [join(home, ".zcode", "v2"), join(dataDir, ".zcode", "v2")]) {
+        await mkdir(base, { recursive: true });
+        await writeFile(join(base, "credentials.json"), JSON.stringify(record));
+      }
       this.credentialsInstalled = true;
     },
     async writeAccountSelection(providerId = "account:zai-individual-coding-plan", modelId = "GLM-5.3-Flash") {

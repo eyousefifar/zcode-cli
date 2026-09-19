@@ -157,6 +157,38 @@ describe("headless offline", () => {
     expect(body).toContain(marker);
   }, 60_000);
 
+  test("Workflow tool executes a real helper workflow offline (R1.2)", async () => {
+    // The model asks for the built-in Workflow tool with an inline,
+    // network-free script. The runtime must parse the script meta and run the
+    // body through its `node --eval` helper subprocess — replayed by our
+    // entry shim in a guarded child (the workflow sandbox nulls globalThis
+    // process, so the old in-process replay crashed after success).
+    server.setScenario({
+      kind: "tool-use",
+      toolName: "Workflow",
+      toolInput: {
+        name: "e2e-workflow",
+        script: 'export const meta = { name: "e2e-workflow" };\nlog("workflow running");\nreturn "WORKFLOW-TOOL-OK";\n',
+      },
+      followUpText: "WORKFLOW-TOOL-FOLLOWUP-OK",
+    });
+    try {
+      const before = server.requests().length;
+      const r = await runBinary(sandbox, ["-p", "Run the workflow.", "--json"], { timeoutMs: 120_000 });
+      const combined = r.stdout + r.stderr;
+      if (r.exitCode !== 0) console.log("workflow run failed:", combined.slice(0, 3000));
+      expect(r.exitCode).toBe(0);
+      expect(combined).toContain("WORKFLOW-TOOL-FOLLOWUP-OK");
+      // The tool round-trip: ≥2 model requests; the follow-up carries the
+      // tool result content.
+      const requests = server.requests().slice(before);
+      expect(requests.length).toBeGreaterThanOrEqual(2);
+      expect(JSON.stringify(requests.at(-1)?.body)).toContain("WORKFLOW-TOOL-OK");
+    } finally {
+      server.setScenario({ kind: "success" });
+    }
+  }, 150_000);
+
   test("--mode build/edit/yolo are accepted, plan is rejected", async () => {
     for (const mode of ["build", "edit", "yolo"]) {
       const r = await runBinary(sandbox, ["-p", "Say the sentinel", "--mode", mode, "--json"]);

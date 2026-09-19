@@ -194,7 +194,7 @@ for (const scenario of SCENARIOS) {
   try {
     sandbox = await createSandbox();
     server = await startModelServer({ sentinel: scenario.response ?? "TUI-SHOT-SENTINEL" });
-    await sandbox.installCredentials();
+    await sandbox.installSyntheticCredentials();
     await sandbox.writeProviderFixture({ baseUrl: server.url });
     await sandbox.writeAccountSelection();
     tui = await startTui(sandbox, {
