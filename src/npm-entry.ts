@@ -2,10 +2,12 @@
 // runtime's `require("node:sea")` gets the same build-time shim the compiled
 // binary gets. Runs under bun only.
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir, userInfo } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { applyStateIsolation, ensureCliSettingsFile, preflightStateDir } from "./state-isolation.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -20,11 +22,19 @@ if (!process.env.USER) {
   }
 }
 
-// Isolated state dir — see src/entry.ts for rationale. Session DB and logs
-// remain under $HOME/.zcode/cli (upstream hardwires them).
+// Isolated state dir — session DB, logs and storage root follow the data dir
+// via the runtime's native override envs (see src/state-isolation.ts). The
+// CLI settings mirror stays at $HOME/.zcode/cli (documented exception).
 if (!process.env.ZCODE_DATA_BASE_DIR) {
   process.env.ZCODE_DATA_BASE_DIR = join(homedir(), ".zcode-standalone");
 }
+try {
+  preflightStateDir();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+}
+applyStateIsolation();
 
 // Vendored TUI: default the zcode-app-cli npm update check off (not our package).
 if (process.env.ZCODE_DISABLE_UPDATE_CHECK === undefined) {
@@ -32,18 +42,13 @@ if (process.env.ZCODE_DISABLE_UPDATE_CHECK === undefined) {
 }
 
 // Mirror upstream's `ensureCliSettings`: create the CLI settings file (its
-// designed location, shared with the desktop app's CLI engine) if absent.
+// designed location, shared with the desktop app's CLI engine) if absent —
+// exclusive creation, never truncating a concurrent writer's content.
 try {
-  const cliDir = join(homedir(), ".zcode", "cli");
-  const cliSettingsPath = join(cliDir, "setting.json");
-  if (!existsSync(cliSettingsPath)) {
-    mkdirSync(cliDir, { recursive: true, mode: 0o700 });
-    writeFileSync(
-      cliSettingsPath,
-      `${JSON.stringify(JSON.parse(readFileSync(join(here, "../vendor/cli-settings-default.json"), "utf8")), null, 2)}\n`,
-      { mode: 0o600 },
-    );
-  }
+  ensureCliSettingsFile(
+    join(homedir(), ".zcode", "cli", "setting.json"),
+    `${JSON.stringify(JSON.parse(readFileSync(join(here, "../vendor/cli-settings-default.json"), "utf8")), null, 2)}\n`,
+  );
 } catch {
   // best effort — the runtime tolerates a missing file
 }

@@ -2,9 +2,12 @@
 // local mock model server. No real network, no quota, deterministic.
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { createSandbox, runBinary, type Sandbox } from "./helpers/sandbox.ts";
 import { startModelServer, type ModelServer } from "./helpers/model-server.ts";
+
+const exists = (p: string) => existsSync(p);
 
 let sandbox: Sandbox;
 let server: ModelServer;
@@ -188,6 +191,63 @@ describe("headless offline", () => {
       server.setScenario({ kind: "success" });
     }
   }, 150_000);
+
+  test("session state is isolated under ZCODE_DATA_BASE_DIR (R2.1)", async () => {
+    const r = await runBinary(sandbox, ["-p", "Say the sentinel", "--json"]);
+    expect(r.exitCode).toBe(0);
+    // The session DB and logs must live inside the sandbox data dir…
+    expect(await exists(join(sandbox.dataDir, ".zcode", "cli", "db", "db.sqlite"))).toBe(true);
+    expect(await exists(join(sandbox.dataDir, ".zcode", "cli", "log"))).toBe(true);
+    // …and nothing mutable may land in the shared $HOME location.
+    expect(await exists(join(sandbox.home, ".zcode", "cli", "db"))).toBe(false);
+    expect(await exists(join(sandbox.home, ".zcode", "cli", "log"))).toBe(false);
+  }, 60_000);
+
+  test("no non-loopback egress during an offline run (R2.2/D11)", async () => {
+    // Recording CONNECT proxy: every outbound HTTP(S) request that honors the
+    // standard proxy envs lands here and is rejected. Loopback is excluded
+    // via NO_PROXY (the mock model server must keep working), so anything
+    // that shows up is, by definition, attempted non-loopback egress — RUM
+    // telemetry, the remote-control websocket, plugin CDN, update checks.
+    const seen: string[] = [];
+    const proxy = Bun.listen({
+      hostname: "127.0.0.1",
+      port: 0,
+      socket: {
+        data(socket, data) {
+          const text = new TextDecoder().decode(data);
+          const connect = text.match(/^CONNECT ([^\s]+)/);
+          const host = connect?.[1] ?? text.match(/^host:\s*([^\r\n]+)/im)?.[1];
+          if (host) seen.push(host);
+          socket.write("HTTP/1.1 502 Egress blocked by zcode-cli offline test\r\ncontent-length: 0\r\n\r\n");
+          socket.end();
+        },
+        error() {},
+        close() {},
+      },
+    });
+    try {
+      const r = await runBinary(sandbox, ["-p", "Say the sentinel", "--json"], {
+        extraEnv: {
+          HTTPS_PROXY: `http://127.0.0.1:${proxy.port}`,
+          HTTP_PROXY: `http://127.0.0.1:${proxy.port}`,
+          ALL_PROXY: `http://127.0.0.1:${proxy.port}`,
+          NO_PROXY: "127.0.0.1,localhost",
+        },
+      });
+      expect(r.exitCode).toBe(0);
+      expect(r.stdout).toContain(SENTINEL);
+      // Allowlist policy (docs/EGRESS.md): only the disclosed Z.ai coding-plan
+      // backend may be contacted on a normal run. Everything else — RUM
+      // telemetry, plugin CDN, remote-control websocket, update checks — must
+      // stay silent; a new host here means undisclosed egress (release blocker).
+      const allowlist = ["zcode.z.ai:443"]; // builtin-provider refresh, see docs/EGRESS.md
+      const undisclosed = seen.filter((h) => !allowlist.includes(h));
+      expect(undisclosed).toEqual([]);
+    } finally {
+      proxy.stop(true);
+    }
+  }, 90_000);
 
   test("--mode build/edit/yolo are accepted, plan is rejected", async () => {
     for (const mode of ["build", "edit", "yolo"]) {

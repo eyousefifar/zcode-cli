@@ -13,7 +13,8 @@ step() { echo; echo "=== $1 ==="; }
 step "build (fork TUI + native + npm entry)"
 bash scripts/build.sh native npm || FAIL=1
 
-step "tier 1: TUI logic tests (test/tui-unit)"
+step "tier 1: wrapper state-isolation + TUI logic tests (test/unit, test/tui-unit)"
+bun test test/unit/ || FAIL=1
 bun test test/tui-unit/ || FAIL=1
 
 step "tier 2: in-process whole-app TUI (test/tui-render)"

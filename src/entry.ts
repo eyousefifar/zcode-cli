@@ -23,17 +23,21 @@
 //    poisoning that would kill our own process if the shim ran in it. So the
 //    helper is replayed in a guarded child copy of this binary (clean
 //    globals, real event-loop drain semantics), never in-process.
-// 5. Data-dir isolation: state lives in ~/.zcode-standalone by default.
-//    Note the runtime still hardwires the session DB, logs and the CLI
-//    settings file to $HOME/.zcode/cli, so isolation covers the
-//    credential/model store only (see docs/ENV.md).
+// 5. Data-dir isolation: mutable state (credentials, provider config,
+//    session DB, logs, storage root) lives under ~/.zcode-standalone by
+//    default, routed through ZCODE_DATA_BASE_DIR plus the runtime's native
+//    override envs (see src/state-isolation.ts). Documented exceptions: the
+//    CLI settings mirror stays at $HOME/.zcode/cli (shared with the desktop
+//    app), as do the vendor's rollout/model-io debug dirs (see docs/ENV.md).
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir, userInfo } from "node:os";
 import { join } from "node:path";
 
 import builtinProviderConfig from "../vendor/zcode-builtin.json" with { type: "file" };
 import defaultCliSettings from "../vendor/cli-settings-default.json" with { type: "file" };
+
+import { applyStateIsolation, ensureCliSettingsFile, preflightStateDir } from "./state-isolation.ts";
 
 const BUNFS = "/$bunfs/root/";
 
@@ -118,23 +122,30 @@ if (realProcess.argv[2] === EVAL_REPLAY_CHILD) {
 }
 
 async function startCli(): Promise<void> {
-  // Isolated state dir — see the note in the header: the credential/model
-  // store is isolated; the session DB and logs stay under $HOME/.zcode/cli
-  // because the runtime hardwires them there.
+  // Isolated state dir — session DB, logs and storage root follow the data
+  // dir via the runtime's native override envs (see src/state-isolation.ts).
+  // The CLI settings mirror intentionally stays at $HOME/.zcode/cli (shared
+  // with the desktop app; documented exception in docs/ENV.md).
   if (!process.env.ZCODE_DATA_BASE_DIR) {
     process.env.ZCODE_DATA_BASE_DIR = join(home, ".zcode-standalone");
   }
+  try {
+    preflightStateDir();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    realProcess.exit(1);
+  }
+  applyStateIsolation();
 
   // Mirror upstream's `ensureCliSettings`: create the CLI settings file at its
   // designed location ($HOME/.zcode/cli/setting.json — the same file the
-  // desktop app's CLI engine and the bundled TUI read) if absent.
+  // desktop app's CLI engine and the bundled TUI read) if absent — with
+  // exclusive creation so a concurrent writer's content is never truncated.
   try {
-    const cliDir = join(home, ".zcode", "cli");
-    const cliSettingsPath = join(cliDir, "setting.json");
-    if (!existsSync(cliSettingsPath)) {
-      mkdirSync(cliDir, { recursive: true, mode: 0o700 });
-      writeFileSync(cliSettingsPath, readFileSync(defaultCliSettings, "utf8"), { mode: 0o600 });
-    }
+    ensureCliSettingsFile(
+      join(home, ".zcode", "cli", "setting.json"),
+      readFileSync(defaultCliSettings, "utf8"),
+    );
   } catch {
     // best effort — the runtime tolerates a missing file
   }

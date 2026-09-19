@@ -136,8 +136,8 @@ violates or risks one of them:
 - [x] 1.7 Done: fork routes uncaught exceptions/rejections through `ui.stop()` (removed on run end so /login suspend cycles do not stack handlers); child-process crash fixture asserts restore sequences; pty e2e asserts `/login` suspend → command → resume. (D6)
 
 ### R2 — P1: truth about state and boundaries
-- [ ] 2.1 Session isolation: db/logs/settings follow `ZCODE_DATA_BASE_DIR` (or loud documented exception); settings merge-on-write + `wx` creation; npm homedir fallback; writability preflight (D5, D15).
-- [ ] 2.2 Egress disclosure + defaults: document RUM/remote-control/intranet/plugin-CDN; set or verify telemetry-off; pin or disable plugin CDN in this distribution (D11).
+- [x] 2.1 Done: runtime natively honors `ZCODE_STORAGE_DIR`/`ZCODE_SESSION_DB_PATH`/`ZCODE_LOG_DIR` — the wrappers default all three into the data dir (no vendor patching); `ensureCliSettingsFile` creates settings with `wx` (EEXIST = concurrent writer wins); writability preflight fails loudly; settings mirror stays at `~/.zcode/cli/setting.json` as the loud documented exception (docs/ENV.md). e2e asserts db+logs inside data dir and nothing under shared $HOME. (D5, D15)
+- [x] 2.2 Done: `docs/EGRESS.md` allowlist + disclosure rule; egress ENFORCED by a recording-proxy e2e — a headless run may only contact `zcode.z.ai:443` (builtin-provider refresh; empirically caught by the probe, fails gracefully offline). RUM/CDN/remote-control/update-check verified silent. Update-check disabled by default. (D11)
 - [ ] 2.3 Native addons: package-or-disclose (copy `.node` beside binary where present; Linux degradation notice); document tool-resolution order (D9).
 - [ ] 2.4 Contract: `protocolVersion` on RuntimeAdapter; CI contract test freezing `runTui` exports + adapter method names + event vocabulary vs vendor (D10); independent TUI version convention (D21).
 - [ ] 2.5 If npm ships: prepack, `all` keeps explicit targets, bun-guard banner, CI publish (D7 — needs G8 user token).

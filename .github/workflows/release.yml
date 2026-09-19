@@ -3,8 +3,9 @@
 # Contract: a release artifact is only published if
 #   1. the full offline quality gate passed (job `gate`),
 #   2. every target binary was actually executed and printed the version
-#      matching the pushed tag — darwin-arm64 natively, darwin-x64 under
-#      Rosetta, linux-x64 natively, linux-arm64 under qemu,
+#      matching the pushed tag — darwin-arm64 and darwin-x64 on native macOS
+#      runners (Intel macos-13: bun's x64 build needs AVX, absent under
+#      Rosetta), linux-x64 natively, linux-arm64 under qemu,
 #   3. SHA256SUMS over all four binaries is generated and published with them.
 #
 # Bun and every action are pinned to exact commit SHAs (floating tags are a
@@ -28,7 +29,7 @@ jobs:
     runs-on: macos-14
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -62,9 +63,13 @@ jobs:
           - target: darwin-arm64
             os: macos-14
             smoke: native
+          # Real Intel runner: bun's x64 build requires AVX, which Rosetta
+          # (arm64 runners) does not emulate — the dry run proved it (SIGILL
+          # under Rosetta). Execution on genuine Intel macOS is the only
+          # honest smoke for this target.
           - target: darwin-x64
-            os: macos-14
-            smoke: rosetta
+            os: macos-13
+            smoke: native
           - target: linux-x64
             os: ubuntu-24.04
             smoke: native
@@ -72,7 +77,7 @@ jobs:
             os: ubuntu-24.04
             smoke: qemu
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -90,18 +95,16 @@ jobs:
             v*) want="${GITHUB_REF_NAME#v}" ;;
             *) want="" ;;
           esac
-          # darwin-x64 under Rosetta and linux-arm64 under qemu still execute
-          # the real binary here; version printing is part of the smoke.
+          # Non-native targets still execute the real binary (linux-arm64
+          # under qemu); version printing is part of the smoke.
           case "${{ matrix.smoke }}" in
             native) : ;;
-            rosetta) softwareupdate --install-rosetta --agree-to-license >/dev/null 2>&1 || true ;;
             qemu) sudo apt-get -y update >/dev/null && sudo apt-get -y install qemu-user-static >/dev/null ;;
           esac
           binary="dist/zcode-${{ matrix.target }}"
           chmod +x "$binary"
           case "${{ matrix.smoke }}" in
             native) got=$("$binary" --version) ;;
-            rosetta) got=$("$binary" --version) ;;
             qemu) got=$(docker run --rm --platform linux/arm64 -v "$(pwd)/dist:/dist:ro" \
                     ubuntu:22.04 /dist/zcode-${{ matrix.target }} --version) ;;
           esac
