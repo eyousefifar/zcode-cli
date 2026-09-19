@@ -26,6 +26,19 @@ bun test test/headless.e2e.test.ts test/tui.e2e.test.ts || FAIL=1
 step "npm entry smoke (bun dist-npm/entry.js --version)"
 bun dist-npm/entry.js --version || FAIL=1
 
+step "out-of-checkout binary validation (no repo dependencies)"
+VALIDATE_DIR="$(mktemp -d)"
+cp dist/zcode "$VALIDATE_DIR/zcode"
+chmod +x "$VALIDATE_DIR/zcode"
+(
+  cd "$VALIDATE_DIR"
+  HOME="$VALIDATE_DIR/home" ./zcode --version || exit 1
+  # The eval replay re-executes the binary as a child — exercise it from an
+  # arbitrary location too.
+  HOME="$VALIDATE_DIR/home" ./zcode --input-type=module --eval 'console.log("OOT-EVAL-OK");' | grep -q OOT-EVAL-OK || exit 1
+) || FAIL=1
+rm -rf "$VALIDATE_DIR"
+
 step "visual gate (tui-shot PNG capture)"
 if [[ "${RUN_VISUAL:-0}" == "1" ]]; then
   bun scripts/tui-shot.ts || FAIL=1

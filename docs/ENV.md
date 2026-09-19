@@ -36,6 +36,9 @@ clear error otherwise.
 The bundle runs these with the env var value first, falling back to the bare
 command on `PATH`:
 
+Resolution order for each tool: 1) the `ZCODE_*_BINARY` env var, 2) the
+ZCode.app bundle path (macOS, when installed), 3) the bare command on `PATH`.
+
 | Variable | Binary | Bundled with the desktop app at |
 |---|---|---|
 | `ZCODE_RG_BINARY` **[shim]** | ripgrep | `Resources/tools/ripgrep/rg` |
@@ -46,6 +49,16 @@ command on `PATH`:
 The **[shim]** variables are auto-set to the app's bundled binaries when
 `/Applications/ZCode.app` exists; otherwise install `ripgrep`/`ugrep` via your
 package manager.
+
+### Native addons — disclosure (R2.3/D9)
+
+The compiled binary is otherwise self-contained (all JS is bundled; no `.node`
+assets ship beside it), with one known degradation: `@earendil-works/pi-tui`
+ships optional native keyboard prebuilds (`darwin-modifiers.node`,
+`win32-console-mode.node`) for real-time modifier-key polling. These cannot be
+loaded from a compiled binary's virtual filesystem, so modifier detection
+(Shift/Ctrl/Alt state beyond escape-sequence reporting) uses pi-tui's JS
+fallback. Linux never had the prebuilds, so behavior is platform-consistent.
 
 ## Model & networking
 
