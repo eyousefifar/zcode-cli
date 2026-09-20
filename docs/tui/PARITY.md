@@ -94,6 +94,15 @@ marker in code.
 | `src/cli/` vendored helpers with rewritten imports | upstream imported them from its monorepo root | builds + full suite |
 | deps `beautiful-mermaid`, `cli-highlight`, `diff` added | upstream HEAD uses them; were bundled in the old vendor build | build green |
 
+## 4b. Upstream delta absorbed (2026-09-20 sync)
+
+The fork seed (upstream `b8d8e95`) was advanced to upstream `2e735f7` by
+applying their single TUI delta — **session-model recovery** (invalid persisted
+session models now surface a warning and route into `/model` as a replacement
+picker, paired with the 0.16.9 engine's `session-model-recovery` runtime patch
+and `assertSessionModelReady` in cli-config). Applied as a clean patch to
+`packages/tui/src/index.ts`; no [fork] edits conflicted.
+
 ## 5. Gate rule
 
 `scripts/gate.sh` fails unless: build overlays `packages/tui/dist/index.js`; T1–T3

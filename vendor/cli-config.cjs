@@ -40,6 +40,53 @@ function providerMigrationMarkerPath(env = process.env) {
 	return (0, node_path.join)((0, node_path.dirname)(cliSettingsPath(env)), "migrations", `provider-registry-${target}.json`);
 }
 //#endregion
+//#region src/session-model-recovery.ts
+/** sessionEntries already unwraps the stored modelSelection; legacy sibling fields are not authoritative. */
+function inspectSelection(registry, value) {
+	const selection = value && typeof value === "object" && !Array.isArray(value) && "providerId" in value && typeof value.providerId === "string" && value.providerId.trim() && "modelId" in value && typeof value.modelId === "string" && value.modelId.trim() ? value : void 0;
+	const model = selection ? `${selection.providerId}/${selection.modelId}` : "(not selected)";
+	const validation = selection ? registry.validateSelection(selection) : {
+		ok: false,
+		code: "selection-missing"
+	};
+	const state = {
+		model,
+		selection,
+		thoughtLevel: selection?.options?.reasoningLevel,
+		effortOptions: selection ? registry.getModel(selection.providerId, selection.modelId)?.config.optionSpecs.reasoningLevel.values ?? [] : []
+	};
+	if (validation.ok) return state;
+	const code = validation.code ?? "selection-invalid";
+	const reason = {
+		"provider-not-found": "the provider is unavailable",
+		"model-not-found": "the model is not in the current provider catalog",
+		"reasoning-level-missing": "the reasoning level is missing",
+		"reasoning-level-not-supported": "the saved reasoning level is no longer supported",
+		"selection-missing": "no model selection was saved"
+	}[code] ?? "the saved selection is invalid";
+	return {
+		...state,
+		issue: {
+			code,
+			message: `Saved model ${JSON.stringify(model)} cannot be used: ${reason}.`
+		}
+	};
+}
+/** Inspect without changing the session, its credentials, or the shared default. */
+async function readSessionModelState(options) {
+	const entries = await options.sessionStore.sessionEntries({
+		sessionID: options.sessionId,
+		type: "runtime/model_selection"
+	});
+	return entries.length ? inspectSelection(options.registry, entries.at(-1)?.data) : void 0;
+}
+/** Fail before model creation so headless callers retain the cause and recovery instructions. */
+function assertSessionModelReady(options) {
+	if (!options.restored || options.currentSelection && options.registry.validateSelection(options.currentSelection).ok) return;
+	const state = inspectSelection(options.registry, options.restored.selection);
+	if (state.issue) throw new Error(`${state.issue.message} Resume interactively with zcode --resume ${options.sessionId} and use /model to choose a replacement. No model request was sent.`);
+}
+//#endregion
 //#region src/runtime-config-bridge.ts
 function record(value) {
 	return value && typeof value === "object" && !Array.isArray(value) ? value : void 0;
@@ -156,6 +203,8 @@ async function migrateLegacyProviders(options) {
 	}
 }
 //#endregion
+exports.assertSessionModelReady = assertSessionModelReady;
 exports.mergeDesktopSettings = mergeDesktopSettings;
 exports.migrateLegacyProviders = migrateLegacyProviders;
 exports.providerMigrationNeeded = providerMigrationNeeded;
+exports.readSessionModelState = readSessionModelState;

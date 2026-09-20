@@ -17,7 +17,7 @@
    demonstrate interception; the recording proxy's CONNECT handling is kept
    simple and deny-by-default.
 
-Empirically verified 2026-09-20 (build 0.16.5 + fork TUI): a plain headless
+Empirically verified 2026-09-20 (build 0.16.9 + fork TUI): a plain headless
 run contacts only the allowlisted backend.
 
 ## Allowlisted egress

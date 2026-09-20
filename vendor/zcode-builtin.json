@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 28,
+  "revision": 30,
   "config": {
     "providerConfigRules": {
       "templateRules": [
@@ -736,7 +736,7 @@
         },
         {
           "providerId": "account:zai-start-plan",
-          "providerName": "Z.AI Start Plan",
+          "providerName": "Start Plan",
           "config": {
             "group": "zai-family",
             "builtinModelIds": ["GLM-5.3-Flash", "GLM-5.2", "GLM-5-Turbo"],
@@ -751,7 +751,7 @@
             },
             "logo": {
               "type": "builtin",
-              "key": "zai"
+              "key": "start-plan"
             }
           }
         },
@@ -799,7 +799,7 @@
         },
         {
           "providerId": "account:bigmodel-start-plan",
-          "providerName": "BigModel Start Plan",
+          "providerName": "Start Plan",
           "config": {
             "group": "bigmodel-family",
             "builtinModelIds": ["GLM-5.3-Flash", "GLM-5.2", "GLM-5-Turbo"],
@@ -814,7 +814,7 @@
             },
             "logo": {
               "type": "builtin",
-              "key": "bigmodel"
+              "key": "start-plan"
             }
           }
         },
@@ -3791,7 +3791,7 @@
                   "disabled",
                   "enabled"
                 ],
-                "map": "{\"thinking\": {\"type\": reasoningLevel == \"disabled\" ? \"disabled\" : \"adaptive\"}}"
+                "map": "{\n  \"thinking\": {\n    \"type\": reasoningLevel == \"disabled\" ? \"disabled\" : \"adaptive\"\n  }\n}"
               },
               "maxOutputTokens": {
                 "max": 131072
@@ -4038,7 +4038,7 @@
                   "xhigh",
                   "max"
                 ],
-                "map": "{\"reasoning\": {\"effort\": reasoningLevel}}"
+                "map": "{\n  \"reasoning\": {\n    \"effort\": reasoningLevel\n  }\n}"
               },
               "maxOutputTokens": {
                 "max": 128000
@@ -4071,7 +4071,7 @@
                   "high",
                   "xhigh"
                 ],
-                "map": "{\"reasoning\": {\"effort\": reasoningLevel}}"
+                "map": "{\n  \"reasoning\": {\n    \"effort\": reasoningLevel\n  }\n}"
               },
               "maxOutputTokens": {
                 "max": 500000

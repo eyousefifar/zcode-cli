@@ -37,7 +37,7 @@ violates or risks one of them:
 
 | # | Assumption | Status | Evidence |
 |---|---|---|---|
-| A1 | Fork TUI is behavior-compatible with core 0.16.5 | **Holds** — event vocabulary verified string-by-string against vendor (`tool_call_*`, `model_*`, `subagent_message`, `step-*`) | agent audit F6 |
+| A1 | Fork TUI is behavior-compatible with core 0.16.5→0.16.9 | **Holds** — event vocabulary verified string-by-string against vendor (`tool_call_*`, `model_*`, `subagent_message`, `step-*`) | agent audit F6 |
 | A2 | Core supplies every capability the TUI exposes | **Partially false** — `listPluginReferences` never supplied (`@plugin` autocomplete dead in binary), `initialTuiMode`/`initialPlanEnabled` not forwarded (workaround exists), core's `stdin`/`stderr` options ignored | D10 |
 | A3 | There is a contract between core and TUI | **No protocol exists** — compatibility is string-matching inside a minified blob; `RuntimeAdapter` has no version; nothing freezes method names or event vocabulary in CI | D3, G7 |
 | A4 | The vendor blob we ship is auditable | **No** — 11.4 MB `vendor/zcode.cjs` has no extract recipe, no SHA256SUMS, no recorded source (app version, sync commit) | D4 |

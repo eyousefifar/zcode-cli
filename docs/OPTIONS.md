@@ -1,4 +1,4 @@
-# CLI options reference (zcode 0.16.5)
+# CLI options reference (zcode 0.16.9)
 
 Verified against the actual argument parser embedded in `vendor/zcode.cjs`
 (this is the source of truth — the built-in `--help` text has some drift, see

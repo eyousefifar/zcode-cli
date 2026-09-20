@@ -2,7 +2,7 @@ This repository contains three kinds of code with different terms:
 
 1. `vendor/zcode.cjs`, `vendor/cli-config.cjs` and `vendor/zcode-builtin.json`
    Proprietary software of Z.ai (https://z.ai). The runtime is the ZCode
-   desktop app's CLI engine (version 0.16.5) in the patched form produced by
+   desktop app's CLI engine (version 0.16.9, app 3.14.0) in the patched form produced by
    kingsword09/zcode-cli's sync tooling (their MIT-licensed repo applies
    documented interop bridges to the extracted bundle), plus two defensive
    changes of ours: optional chaining on five property reads in the TUI

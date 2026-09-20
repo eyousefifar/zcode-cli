@@ -149,4 +149,4 @@ The bundle itself is unmodified.
 ## Versioning
 
 Versions track the upstream CLI version found in the app bundle
-(`0.16.5` at time of packaging).
+(`0.16.9` from app 3.14.0 at time of packaging).

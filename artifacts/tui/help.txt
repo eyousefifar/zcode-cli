@@ -1,5 +1,5 @@
-╭─ ◆ ZCODE  v0.16.5 ───────────────────────────────────────────────────────╮
-│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-5rTJkm/workspace │
+╭─ ◆ ZCODE  v0.16.9 ───────────────────────────────────────────────────────╮
+│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-xEZFdT/workspace │
 │ Ask a task about this workspace                                          │
 ╰─ /help commands · /status details ───────────────────────────────────────╯
 
@@ -14,9 +14,7 @@
  - /init [notes]: Create or update workspace AGENTS.md instructions.                                          
  - /expert [status|resume|stop|<task>]: Run or manage the expert workflow.                                    
  - /effort [list|<level>]: Show or switch the current session reasoning effort.                               
- - /workflow [create [--name <name>] [--user] [--overwrite] <description>|validate|run|status|resume]         
-   <scriptPath|runId> [args-json]: Create, validate, or run a script workflow.                                
- - /workflows [runId]: List or inspect workflow runs.                                                         
+ - /dwf [list|cancel [runId]|resume <runId>]: List, cancel, or resume dynamic workflow runs.                  
  - /fork [latest|checkpointId]: Fork a new session from a workspace checkpoint.                               
  - /locale [auto|en-US|zh-CN]: Show or switch the UI locale.                                                  
  - /mcp [list|status|connect <server>|disconnect <server>]: Show or manage configured MCP servers.            
@@ -38,8 +36,8 @@
  ◈ mock/mock-model ─ ◉ build ─ ⚡ enabled ─ ctx 100% left ─ session 0 tokens
 
 === buffer ===
-╭─ ◆ ZCODE  v0.16.5 ───────────────────────────────────────────────────────╮
-│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-5rTJkm/workspace │
+╭─ ◆ ZCODE  v0.16.9 ───────────────────────────────────────────────────────╮
+│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-xEZFdT/workspace │
 │ Ask a task about this workspace                                          │
 ╰─ /help commands · /status details ───────────────────────────────────────╯
 
@@ -54,9 +52,7 @@
  - /init [notes]: Create or update workspace AGENTS.md instructions.                                          
  - /expert [status|resume|stop|<task>]: Run or manage the expert workflow.                                    
  - /effort [list|<level>]: Show or switch the current session reasoning effort.                               
- - /workflow [create [--name <name>] [--user] [--overwrite] <description>|validate|run|status|resume]         
-   <scriptPath|runId> [args-json]: Create, validate, or run a script workflow.                                
- - /workflows [runId]: List or inspect workflow runs.                                                         
+ - /dwf [list|cancel [runId]|resume <runId>]: List, cancel, or resume dynamic workflow runs.                  
  - /fork [latest|checkpointId]: Fork a new session from a workspace checkpoint.                               
  - /locale [auto|en-US|zh-CN]: Show or switch the UI locale.                                                  
  - /mcp [list|status|connect <server>|disconnect <server>]: Show or manage configured MCP servers.            

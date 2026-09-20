@@ -6,6 +6,7 @@ import { access, link, mkdir, open, readFile, rename, rm, stat, writeFile } from
 import { basename, dirname, extname, isAbsolute, join, posix, resolve, sep, win32 } from "node:path";
 import { randomUUID } from "node:crypto";
 import { Box, CombinedAutocompleteProvider, Container, Editor, Image, Input, Markdown, ProcessTerminal, ScrollView, SelectList, Spacer, Text, TuiAltScreen, TuiMainScreen, VStack, decodeKittyPrintable, getKeybindings, isKeyRelease, isViewportTUI, matchesKey, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
+import { StringDecoder } from "node:string_decoder";
 import { isDeepStrictEqual } from "node:util";
 var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 var __require = /* #__PURE__ */ (() => createRequire(import.meta.url))();
@@ -161612,7 +161613,7 @@ function terminationSignal(signal) {
 function processError(message, code) {
 	return new AppServerProcessError(message, code);
 }
-async function readBounded(stream, onOverflow) {
+async function readBounded(stream, onOverflow, onChunk) {
 	if (!stream) return "";
 	const chunks = [];
 	let bytes = 0;
@@ -161624,6 +161625,7 @@ async function readBounded(stream, onOverflow) {
 			throw new Error(`App-server output exceeded ${maximumOutputBytes} bytes.`);
 		}
 		chunks.push(buffer);
+		onChunk?.(buffer);
 	}
 	return Buffer.concat(chunks).toString("utf8");
 }
@@ -161682,7 +161684,18 @@ async function requestAppServer(request) {
 	request.signal?.addEventListener("abort", onAbort, { once: true });
 	if (request.signal?.aborted) onAbort();
 	child.stdin.on("error", () => {});
-	child.stdin.end(`${JSON.stringify({
+	const decoder = new StringDecoder("utf8");
+	let pending = "";
+	const stdoutPromise = readBounded(child.stdout, terminateForOverflow, (chunk) => {
+		pending += decoder.write(chunk);
+		let newline;
+		while ((newline = pending.indexOf("\n")) >= 0) {
+			const line = pending.slice(0, newline);
+			pending = pending.slice(newline + 1);
+			if (responseEnvelope(line) && !child.stdin.writableEnded) child.stdin.end();
+		}
+	});
+	child.stdin.write(`${JSON.stringify({
 		id: 1,
 		method: request.method,
 		params: request.params
@@ -161690,7 +161703,7 @@ async function requestAppServer(request) {
 	try {
 		const [code, stdout, stderr] = await Promise.all([
 			exited,
-			readBounded(child.stdout, terminateForOverflow),
+			stdoutPromise,
 			readBounded(child.stderr, terminateForOverflow)
 		]);
 		if (request.signal?.aborted) throw cancellationError(request.signal);
@@ -166057,6 +166070,8 @@ var ZCodeTui = class {
 	permissionRequests = new PermissionRequestQueue();
 	choiceDepth = 0;
 	settingSwitchInFlight = false;
+	sessionModelIssue;
+	sessionModelRecovery;
 	fullscreenWelcomeVisible = true;
 	fullscreenWelcomeTransitionTimer;
 	sessionHasContent = false;
@@ -166233,6 +166248,7 @@ var ZCodeTui = class {
 				this.debugEvent("workflow", event);
 				this.refreshWorkflowFromEvent();
 			}) ?? void 0;
+			if (this.sessionModelIssue) this.recoverSessionModel();
 			await this.done;
 		} finally {
 			process.off("SIGINT", onSigint);
@@ -166854,7 +166870,7 @@ var ZCodeTui = class {
 		const submission = queuedSubmission ?? protectSubmission(input);
 		if (!input.startsWith("/") && !this.primaryTurnActive) {
 			if (!await preflightSubmission({
-				validate: () => missingCodingPlanKey({
+				validate: () => this.sessionModelIssue ? Promise.resolve(`${this.sessionModelIssue} Choose a model with /model before continuing.`) : missingCodingPlanKey({
 					model: this.model,
 					workingDirectory: this.options.workspaceDirectory
 				}),
@@ -167329,7 +167345,10 @@ var ZCodeTui = class {
 		}
 		if (appliesToSetting(settingTarget, "mode") && typeof result.mode === "string") this.mode = result.mode;
 		if (typeof result.planEnabled === "boolean") this.planEnabled = result.planEnabled;
-		if (appliesToSetting(settingTarget, "model") && result.model !== void 0) this.model = modelLabel(result.model);
+		if (appliesToSetting(settingTarget, "model") && result.model !== void 0) {
+			this.model = modelLabel(result.model);
+			this.sessionModelIssue = void 0;
+		}
 		if (typeof result.loginRequired === "boolean") {
 			this.setLoginRequired(result.loginRequired);
 			if (!result.loginRequired && result.model === void 0 && appliesToSetting(settingTarget, "model")) {
@@ -167350,16 +167369,10 @@ var ZCodeTui = class {
 		if (isRecord(result.selection)) await this.showSelection(result.selection);
 		if (result.resetSessionProjection === true) {
 			await this.refreshExecutionState();
-			try {
-				const persistedModel = await this.options.readSessionModel?.();
-				if (isRecord(persistedModel) && typeof persistedModel.model === "string") {
-					this.model = persistedModel.model;
-					this.thoughtLevel = asString(persistedModel.thoughtLevel);
-					if (Array.isArray(persistedModel.effortOptions)) this.effortOptions = persistedModel.effortOptions;
-				}
-			} catch {}
+			await this.restoreSessionModel();
 			this.updateMetadata();
 			this.ui.requestRender();
+			if (this.sessionModelIssue) await this.recoverSessionModel();
 		}
 	}
 	onEvent(value, turnEpoch) {
@@ -168711,11 +168724,16 @@ var ZCodeTui = class {
 	/** Switch this session while preserving the shared default model. */
 	async showModelPicker() {
 		await this.refreshModelOptions();
+		if (this.stopped) return true;
 		const picker = modelPicker(this.modelOptions, this.model);
-		if (picker.items.length === 0) return false;
+		if (picker.items.length === 0) {
+			if (!this.sessionModelIssue) return false;
+			this.addNotice(`${this.sessionModelIssue} No models are available. Run /login or configure a provider in /settings, then use /model.`, "warning");
+			return true;
+		}
 		const modelId = (await this.showChoice({
-			title: "Select model",
-			prompt: `Current model: ${this.model}. · session only — saved defaults are unchanged`,
+			title: this.sessionModelIssue ? "Select a replacement model" : "Select model",
+			prompt: this.sessionModelIssue ? `${this.sessionModelIssue} Choose a model for this session.` : `Current model: ${this.model}. · session only — saved defaults are unchanged`,
 			help: "Up/Down choose · Enter switch · Esc cancel",
 			items: picker.items.map((item) => ({
 				...item,
@@ -168723,7 +168741,10 @@ var ZCodeTui = class {
 			})),
 			selectedIndex: picker.selectedIndex
 		}))?.payload;
-		if (typeof modelId !== "string") return true;
+		if (typeof modelId !== "string") {
+			if (this.sessionModelIssue && !this.stopped) this.addNotice("Model selection unchanged. Choose a model with /model before continuing.", "warning");
+			return true;
+		}
 		await this.switchTransientModel(modelId);
 		return true;
 	}
@@ -168736,9 +168757,10 @@ var ZCodeTui = class {
 		this.settingSwitchInFlight = true;
 		try {
 			const previousModel = this.model;
+			const recovering = this.sessionModelIssue !== void 0;
 			const result = await this.options.setTransientModel(modelId);
 			await this.handleResult(result, false);
-			const status = this.model === previousModel ? "already active" : "now";
+			const status = !recovering && this.model === previousModel ? "already active" : "now";
 			this.addNotice(`Session model ${status}: ${this.model} · saved defaults unchanged.`, "muted");
 		} catch (error) {
 			this.addNotice(`Could not switch model: ${error instanceof Error ? error.message : String(error)}`, "error");
@@ -170001,14 +170023,27 @@ var ZCodeTui = class {
 			const message = error instanceof Error ? error.message : String(error);
 			this.addNotice(`Unable to restore session transcript: ${message}`, "warning");
 		}
+		await this.restoreSessionModel();
+	}
+	async restoreSessionModel() {
+		this.sessionModelIssue = void 0;
 		try {
-			const persistedModel = await this.options.readSessionModel?.();
-			if (isRecord(persistedModel) && typeof persistedModel.model === "string") {
-				this.model = persistedModel.model;
-				this.thoughtLevel = asString(persistedModel.thoughtLevel);
-				if (Array.isArray(persistedModel.effortOptions)) this.effortOptions = persistedModel.effortOptions;
-			}
-		} catch {}
+			const saved = await this.options.readSessionModel?.();
+			if (!isRecord(saved)) return;
+			if (typeof saved.model === "string") this.model = saved.model;
+			this.thoughtLevel = asString(saved.thoughtLevel);
+			if (Array.isArray(saved.effortOptions)) this.effortOptions = saved.effortOptions;
+			if (isRecord(saved.issue)) this.sessionModelIssue = asString(saved.issue.message);
+		} catch (error) {
+			this.addNotice(`Unable to inspect the saved session model: ${error instanceof Error ? error.message : String(error)}`, "warning");
+		}
+	}
+	recoverSessionModel() {
+		if (this.sessionModelRecovery) return this.sessionModelRecovery;
+		this.sessionModelRecovery = this.showModelPicker().then(() => {}).finally(() => {
+			this.sessionModelRecovery = void 0;
+		});
+		return this.sessionModelRecovery;
 	}
 	updateMetadata() {
 		this.editor.planEnabled = this.planEnabled;

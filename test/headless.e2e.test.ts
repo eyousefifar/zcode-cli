@@ -329,7 +329,7 @@ describe("headless offline", () => {
     const r = await runBinary(sandbox, ["doctor"]);
     expect(r.exitCode).toBe(0);
     expect(r.stdout).toContain("zcode doctor");
-    expect(r.stdout).toContain("0.16.5");
+    expect(r.stdout).toContain("0.16.9");
   }, 60_000);
 
   test("unknown flags fail with a clear parser error", async () => {

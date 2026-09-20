@@ -1,6 +1,6 @@
-── ◆ ZCODE  v0.16.5 ──────────────────────────────────────────────────────────────────────────────────────────
+── ◆ ZCODE  v0.16.9 ──────────────────────────────────────────────────────────────────────────────────────────
 ╭─ Workspace ──────────────────────────────────────────────────────────────╮
-│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-1OGchT/workspace │
+│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-zjiCIj/workspace │
 │ Ask a task about this workspace                                          │
 ╰─ /help commands · /status details ───────────────────────────────────────╯
 
@@ -32,9 +32,9 @@
  ◈ mock/mock-model ─ ◉ build ─ ⚡ enabled ─ ctx 100% left ─ session 0 tokens
 
 === buffer ===
-── ◆ ZCODE  v0.16.5 ──────────────────────────────────────────────────────────────────────────────────────────
+── ◆ ZCODE  v0.16.9 ──────────────────────────────────────────────────────────────────────────────────────────
 ╭─ Workspace ──────────────────────────────────────────────────────────────╮
-│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-1OGchT/workspace │
+│ …ders/69/sq_nv_jx3t16qxx43jwtb0tc0000gn/T/zcode-sandbox-zjiCIj/workspace │
 │ Ask a task about this workspace                                          │
 ╰─ /help commands · /status details ───────────────────────────────────────╯
 

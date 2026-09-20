@@ -55,7 +55,7 @@ describe("tui offline", () => {
   test("boots to the ready screen", async () => {
     await withTui(async (tui) => {
       const text = tui.screenText();
-      expect(text).toMatch(/ZCODE\s+v0\.16\.5/);
+      expect(text).toMatch(/ZCODE\s+v0\.16\.9/);
       expect(text).toContain("Ask a task about this workspace");
     });
   }, 60_000);

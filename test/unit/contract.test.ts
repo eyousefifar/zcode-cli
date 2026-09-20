@@ -21,12 +21,13 @@ describe("fork↔vendor contract", () => {
   test("vendor loads the TUI from the overlay path and consumes .runTui", () => {
     const vendor = readFileSync(VENDOR, "utf8");
     // Load path (SEA extraction target) — scripts/build.sh copies our fork
-    // build to exactly this path.
+    // build to exactly this path. Anchors updated for the 0.16.9 engine
+    // (loader identifier changed from AZn to oQo).
     expect(vendor).toContain('node_modules/@zcode/tui/dist/index.js');
     // Non-SEA fallback import.
     expect(vendor).toContain('import("@zcode/tui")');
     // The only consumed export at the call site: `.runTui`.
-    expect(vendor).toMatch(/\(await AZn\(\)\)\.runTui/);
+    expect(vendor).toMatch(/\(await oQo\(\)\)\.runTui/);
   });
 
   test("fork dist exists, exports runTui, and the overlay is byte-identical", () => {
@@ -43,7 +44,7 @@ describe("fork↔vendor contract", () => {
 
   test("event vocabulary: normalizer understands the vendor's session event types", async () => {
     const { normalizeEvent } = await import("../../packages/tui/src/events.ts");
-    // Frozen as of vendor 0.16.5 — observed live via ZCODE_TUI_DEBUG_EVENTS
+    // Frozen as of vendor 0.16.9 — observed live via ZCODE_TUI_DEBUG_EVENTS
     // during pty e2e runs (incl. tool_use/permission flows: tool_call_scheduled,
     // permission_requested, streaming_tool_ledger_updated). If the vendor
     // renames/adds event types, update the fork's normalizer AND this list.
