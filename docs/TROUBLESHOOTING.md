@@ -28,13 +28,17 @@ Run again with `--verbose` for the cause. Common causes:
 
 ## "Interactive TUI is not available"
 
-Expected: the upstream CLI bundle ships without the `@zcode/tui` package, so
-no packaging of it can offer the interactive TUI. Use headless mode:
+The TUI requires an interactive terminal (a TTY). Under a pipe, a CI runner
+or a captured shell it refuses on purpose:
 
 ```bash
+# headless alternatives:
 zcode -p "your prompt"
 zcode -p "your prompt" --json
 ```
+
+Inside a real terminal the `tui` command (or no command) runs the full
+interactive UI — see docs/tui/ for its architecture and test coverage.
 
 ## "ZCode Built-in missing" / "ZCode Built-in skipped (not-due)" on stderr
 

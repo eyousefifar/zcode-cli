@@ -33,6 +33,13 @@ Nothing else is touched — byte-identical otherwise to the sync-tooling
 output. The sync tooling itself applies documented interop bridges to the
 extracted desktop bundle; those are upstream (kingsword09) changes, not ours.
 
+**Known limitation:** the exact upstream sync revision / source artifact of
+the kingsword09 sync that produced these files is not recorded here (the
+vendor arrived in this repo before provenance tracking started). If you need
+bitwise reproducibility against upstream, treat the SHA256SUMS in this
+directory as the identity anchor and `git log --follow vendor/` as the change
+history.
+
 ## Verification
 
 ```

@@ -184,9 +184,10 @@ describe("tui agent loop", () => {
         await tui.waitForText(FOLLOW_UP, 90_000);
         // The tool actually ran in the sandbox workspace.
         expect(await workspaceFiles()).toContain(TOOL_MARKER);
-        // The tool result reached the model in the follow-up request.
+        // The tool result reached the model in a tool-role message.
         const last = server.requests().at(-1)!;
-        expect(JSON.stringify(last.body)).toContain(TOOL_MARKER);
+        const messages = ((last.body as any)?.messages ?? []) as Array<{ role: string }>;
+        expect(messages.some((m) => m.role === "tool")).toBe(true);
         tui.type("/exit\r");
         const deadline = Date.now() + 20_000;
         while (Date.now() < deadline && tui.exitCode() === null) await Bun.sleep(50);
@@ -238,6 +239,12 @@ describe("tui agent loop", () => {
         tui.type("\u001b"); // Esc — cancel
         await tui.waitForText(FOLLOW_UP, 90_000);
         expect(await workspaceFiles()).not.toContain(TOOL_MARKER);
+        // The cancellation reached the model as the tool result.
+        const last = server.requests().at(-1)!;
+        const messages = ((last.body as any)?.messages ?? []) as Array<{ role: string; content?: string }>;
+        const toolMsgs = messages.filter((m) => m.role === "tool");
+        expect(toolMsgs.length).toBeGreaterThan(0);
+        expect(toolMsgs.map((m) => m.content ?? "").join(" ")).toMatch(/cancel|deny|denied/i);
       } finally {
         await tui.close();
       }

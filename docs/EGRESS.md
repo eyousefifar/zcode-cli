@@ -1,12 +1,24 @@
 # Network egress — what this distribution talks to, and why
 
-Verified empirically (2026-09-20, build 0.16.5 + fork TUI): a recording proxy
-in the offline e2e suite captures every proxy-honoring egress attempt during a
-headless run. The test (`test/headless.e2e.test.ts`, "no non-loopback
-egress…") enforces that **only the allowlist below is ever contacted** — any
-new egress endpoint fails CI until it is disclosed here. Residual gap:
-egress that ignores standard proxy envs (raw UDP, pinned sockets) is not
-visible to the probe; nothing observed suggests such traffic exists.
+## Enforcement model (what is enforced vs. observed)
+
+1. **Denied (enforced):** the gate runs the entire test phase with dead-sink
+   proxies (`127.0.0.1:9`) on standard `HTTP(S)_PROXY`/`ALL_PROXY` AND the
+   vendor's native `ZCODE_*_PROXY` variables, propagated into every sandboxed
+   test child. Any proxy-honoring egress outside `NO_PROXY` fails the suite.
+2. **Recorded (allowlist-checked):** the egress e2e also runs the binary under
+   a recording proxy and asserts nothing outside the allowlist is contacted.
+3. **Not visible (documented residual risk):** traffic that ignores proxy
+   environment variables entirely (raw UDP, pinned sockets). Nothing observed
+   suggests such traffic exists; the vendor bundles `proxy-from-env`-style
+   resolution for its HTTP stacks.
+4. **Not canary-pinned:** the startup provider-refresh is time-gated by state
+   outside the test sandbox, so the e2e cannot deterministically force it to
+   demonstrate interception; the recording proxy's CONNECT handling is kept
+   simple and deny-by-default.
+
+Empirically verified 2026-09-20 (build 0.16.5 + fork TUI): a plain headless
+run contacts only the allowlisted backend.
 
 ## Allowlisted egress
 

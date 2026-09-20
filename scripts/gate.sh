@@ -29,6 +29,10 @@ if [[ "${RUN_ONLINE:-0}" != "1" && "${RUN_PERF:-0}" != "1" ]]; then
   export all_proxy="$ALL_PROXY"
   export NO_PROXY="127.0.0.1,localhost"
   export no_proxy="$NO_PROXY"
+  # The vendor's own resolver reads the ZCODE_-prefixed variants; deny both.
+  export ZCODE_HTTP_PROXY="http://127.0.0.1:9"
+  export ZCODE_HTTPS_PROXY="http://127.0.0.1:9"
+  export ZCODE_NO_PROXY="127.0.0.1,localhost"
   echo "network control: proxy-honoring egress denied (dead sink 127.0.0.1:9), loopback exempt"
 fi
 

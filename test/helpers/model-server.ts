@@ -218,18 +218,28 @@ export async function startModelServer(options: StartOptions = {}): Promise<Mode
       const s = scenario as any;
 
       if (kind === "tool-use") {
-        // Serve the tool call ONLY when the request actually advertises the
-        // tool. Background requests (e.g. the TUI's title generation) send
-        // tools: [] — the vendor discards tool calls from them, so handing
-        // the tool call to such a request would lose it nondeterministically
-        // (codex judge round 2, finding 3).
+        // Deterministic request classification (judge round 2):
+        //  - the tool call is served ONLY to a conversation request that
+        //    advertises the tool (background requests like the TUI's title
+        //    generation send tools: [] and would silently discard it);
+        //  - the follow-up text is served ONLY after the tool result for OUR
+        //    call id has actually arrived (no result -> no free success);
+        //  - everything else (control/background requests) gets a neutral
+        //    acknowledgement so it can never win the follow-up.
+        const messages: any[] = Array.isArray(body?.messages) ? body.messages : [];
+        const hasToolResult = JSON.stringify(messages).includes(`"tool_call_id":"${TOOL_CALL_ID}"`);
         const advertised = s.requireAdvertised === false || (
           Array.isArray(body?.tools)
             && body.tools.some((t: any) => (t?.function?.name ?? t?.name) === s.toolName)
         );
-        const first = !toolUseServed && advertised;
-        if (first) toolUseServed = true;
-        return toolUseResponse(protocol, body.stream === true, s.toolName, s.toolInput, s.followUpText, first);
+        if (!toolUseServed && advertised) {
+          toolUseServed = true;
+          return toolUseResponse(protocol, body.stream === true, s.toolName, s.toolInput, s.followUpText, true);
+        }
+        if (toolUseServed && hasToolResult) {
+          return toolUseResponse(protocol, body.stream === true, s.toolName, s.toolInput, s.followUpText, false);
+        }
+        return toolUseResponse(protocol, body.stream === true, s.toolName, s.toolInput, "ACK", false);
       }
       if (kind === "rate-limit") {
         return Response.json(ANTHROPIC_1302, {

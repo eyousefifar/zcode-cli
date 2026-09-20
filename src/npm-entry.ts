@@ -28,13 +28,14 @@ if (!process.env.USER) {
 if (!process.env.ZCODE_DATA_BASE_DIR) {
   process.env.ZCODE_DATA_BASE_DIR = join(homedir(), ".zcode-standalone");
 }
+// Defaults first, then preflight (see src/entry.ts).
+applyStateIsolation();
 try {
   preflightStateDir();
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 }
-applyStateIsolation();
 
 // Vendored TUI: default the zcode-app-cli npm update check off (not our package).
 if (process.env.ZCODE_DISABLE_UPDATE_CHECK === undefined) {

@@ -1,7 +1,7 @@
 # Environment variables
 
 Everything the standalone build sets up for you is marked **[shim]** — those
-are applied by `src/entry.ts` / `src/bin.js` only when you haven't set the
+are applied by `src/entry.ts` / `src/npm-entry.ts` only when you have not set the
 variable yourself.
 
 ## Data & config locations
@@ -68,6 +68,8 @@ fallback. Linux never had the prebuilds, so behavior is platform-consistent.
 | `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY` | Standard proxy support (plus `ZCODE_HTTP_PROXY`, `ZCODE_NO_PROXY` variants). |
 | `NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE` | Custom CA bundles. |
 | `ZCODE_ENDPOINT_ORIGIN`, `ZCODE_BASE_URL` | Endpoint overrides (defaults to the production Z.ai endpoints). |
+| `ZAI_BUSINESS_BASE_URL` | Redirect the coding-plan business API (plan/billing/config traffic) — used by the offline test suite to point the engine at a local mock. Note: under this redirect the interactive tool loop does not run (see ASD-ST100 D23); do not combine with tool-flow tests. |
+| `ZCODE_DISABLE_UPDATE_CHECK` **[shim]** | Disables the TUI's npm update probe. The shim sets it to `1` by default — this distribution is not the package the updater targets. |
 
 ## Telemetry & debugging
 

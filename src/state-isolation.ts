@@ -55,7 +55,7 @@ export function preflightStateDir(): void {
   // Explicit overrides escape the base-dir preflight, so validate the
   // effective mutable destinations individually.
   for (const [label, dir] of [
-    ["session database", dirname(process.env.ZCODE_SESSION_DB_PATH ?? "")],
+    ["session database", process.env.ZCODE_SESSION_DB_PATH ? dirname(process.env.ZCODE_SESSION_DB_PATH) : ""],
     ["log directory", process.env.ZCODE_LOG_DIR ?? ""],
   ] as const) {
     if (!dir) continue;
@@ -82,9 +82,15 @@ export function ensureCliSettingsFile(settingsPath: string, defaultsJson: string
   mkdirSync(dirname(settingsPath), { recursive: true, mode: 0o700 });
   const tmp = `${settingsPath}.tmp-${process.pid}-${Date.now()}`;
   let fd: number | undefined;
+  let created = false;
   try {
     fd = openSync(tmp, "wx", 0o600);
-    writeSync(fd, defaultsJson);
+    created = true; // only WE may unlink tmp now
+    // write-all: writeSync may accept fewer bytes than requested.
+    let offset = 0;
+    while (offset < defaultsJson.length) {
+      offset += writeSync(fd, defaultsJson, offset);
+    }
     closeSync(fd);
     fd = undefined;
     try {
@@ -95,10 +101,12 @@ export function ensureCliSettingsFile(settingsPath: string, defaultsJson: string
     }
   } finally {
     if (fd !== undefined) closeSync(fd);
-    try {
-      unlinkSync(tmp);
-    } catch {
-      // best effort cleanup
+    if (created) {
+      try {
+        unlinkSync(tmp);
+      } catch {
+        // best effort cleanup
+      }
     }
   }
 }

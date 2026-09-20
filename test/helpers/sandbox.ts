@@ -76,7 +76,7 @@ export async function createSandbox(): Promise<Sandbox> {
     binary: BINARY,
     credentialsInstalled: false,
     env() {
-      const base = {
+      const base: Record<string, string> = {
         HOME: home,
         USER: process.env.USER || "tester",
         LOGNAME: process.env.USER || "tester",
@@ -90,6 +90,17 @@ export async function createSandbox(): Promise<Sandbox> {
       if (this.credentialsInstalled) {
         // Synthetic credentials were encrypted under the fixed test secret.
         base.ZCODE_CREDENTIAL_SECRET = TEST_CREDENTIAL_SECRET;
+      }
+      // Propagate the parent's proxy environment: the gate's network control
+      // (dead-sink proxy) must reach sandboxed children, which replace the
+      // whole environment. Without this, the offline guarantee would not
+      // cover the binaries under test (judge round 2, codex #11 / grok caveat).
+      for (const key of [
+        "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
+        "http_proxy", "https_proxy", "all_proxy", "no_proxy",
+        "ZCODE_HTTP_PROXY", "ZCODE_HTTPS_PROXY", "ZCODE_NO_PROXY",
+      ]) {
+        if (process.env[key] !== undefined) base[key] = process.env[key] as string;
       }
       return base;
     },

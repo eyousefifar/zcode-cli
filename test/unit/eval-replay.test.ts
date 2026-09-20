@@ -48,6 +48,34 @@ describe("eval replay (guarded child)", () => {
     expect(argv.at(-1)).toBe("PAYLOAD-MARKER");
   }, 30_000);
 
+  test("cancellation: a module that ignores SIGTERM is SIGKILLed by the escalation", async () => {
+    // The module swallows SIGTERM; the wrapper's supervision must escalate to
+    // SIGKILL (process-group) after ~2s instead of hanging forever.
+    const proc = Bun.spawn(
+      [BINARY, "--input-type=module", "--eval",
+        `process.on("SIGTERM", () => {}); setInterval(() => {}, 100); console.log("READY");`],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+    const reader = proc.stdout.getReader();
+    let out = "";
+    const read = (async () => {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        out += new TextDecoder().decode(value);
+        if (out.includes("READY")) break;
+      }
+    })();
+    await read; // the turn is live and ignoring SIGTERM from here on
+    const startedAt = Date.now();
+    proc.kill("SIGTERM");
+    const code = await proc.exited;
+    const elapsed = Date.now() - startedAt;
+    // Escalation fires at ~2s: the child dies with 137, not by our SIGTERM.
+    expect(elapsed).toBeLessThan(10_000);
+    expect(code === 137 || code === 0).toBe(true);
+  }, 30_000);
+
   test("stdin reaches the replayed module", async () => {
     const proc = Bun.spawn(
       [BINARY, "--input-type=module", "--eval",

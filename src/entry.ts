@@ -87,35 +87,46 @@ if (process.argv[2]?.startsWith(BUNFS)) {
 // process, not ours; stdin/stdout/stderr stay inherited so the vendor's
 // pipes keep working.
 if (realProcess.argv[2] === "--input-type=module" && realProcess.argv[3] === "--eval") {
+  // Own the child's process group so descendants (the evaluator may spawn
+  // children of its own) cannot outlive cancellation holding our pipes.
   const child = Bun.spawn(
     [realProcess.execPath, EVAL_REPLAY_CHILD, ...realProcess.argv.slice(2)],
-    { stdin: "inherit", stdout: "inherit", stderr: "inherit" },
+    {
+      stdin: "inherit", stdout: "inherit", stderr: "inherit",
+      ...(realProcess.platform !== "win32" ? { detached: true } : {}),
+    },
   );
   // Supervise the child's whole lifetime: the vendor cancels helpers by
   // killing THEIR immediate child (us) and awaits close — if we died without
   // forwarding, the evaluator would survive holding our pipes and defeat the
-  // vendor's timeout. Forward, then escalate.
-  let escalated = false;
-  const forward = (signal: NodeJS.Signals) => {
+  // vendor's timeout. Forward persistently (.on — repeated signals must all
+  // reach the child), then escalate to SIGKILL for the whole group.
+  const killTree = (signal: NodeJS.Signals) => {
+    if (realProcess.platform !== "win32" && child.pid) {
+      try {
+        realProcess.kill(-child.pid, signal); // process group
+        return;
+      } catch {
+        // fall through to the direct kill
+      }
+    }
     try {
       child.kill(signal);
     } catch {
       // already gone
     }
+  };
+  let escalated = false;
+  const forward = (signal: NodeJS.Signals) => {
+    killTree(signal);
     if (!escalated) {
       escalated = true;
-      setTimeout(() => {
-        try {
-          child.kill("SIGKILL");
-        } catch {
-          // already gone
-        }
-      }, 2_000).unref?.();
+      setTimeout(() => killTree("SIGKILL"), 2_000).unref?.();
     }
   };
-  realProcess.once("SIGTERM", () => forward("SIGTERM"));
-  realProcess.once("SIGINT", () => forward("SIGINT"));
-  if (realProcess.platform !== "win32") realProcess.once("SIGHUP", () => forward("SIGHUP"));
+  realProcess.on("SIGTERM", () => forward("SIGTERM"));
+  realProcess.on("SIGINT", () => forward("SIGINT"));
+  if (realProcess.platform !== "win32") realProcess.on("SIGHUP", () => forward("SIGHUP"));
   const code = await child.exited;
   realProcess.exit(code ?? 1);
 }
@@ -155,13 +166,15 @@ async function startCli(): Promise<void> {
   if (!process.env.ZCODE_DATA_BASE_DIR) {
     process.env.ZCODE_DATA_BASE_DIR = join(home, ".zcode-standalone");
   }
+  // Defaults first, then preflight — otherwise the writability check would
+  // inspect paths that are about to change underneath it (judge round 2).
+  applyStateIsolation();
   try {
     preflightStateDir();
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     realProcess.exit(1);
   }
-  applyStateIsolation();
 
   // Mirror upstream's `ensureCliSettings`: create the CLI settings file at its
   // designed location ($HOME/.zcode/cli/setting.json — the same file the

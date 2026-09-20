@@ -61,11 +61,17 @@ describe("fork↔vendor contract", () => {
       "permission_requested",
       "streaming_tool_ledger_updated",
     ];
+    // SCOPE (honest): the normalizer passes unknown event types through in a
+    // raw envelope by design, so this assertion cannot detect vendor renames
+    // — it pins that the documented vocabulary flows through without
+    // rejection or data loss. Rename/field-loss detection lives at the
+    // consumer level (tier-2/3 rendering assertions), which is where real
+    // vendor drift actually surfaces.
     for (const type of vendorEventTypes) {
       const event = normalizeEvent({ type, sessionId: "sess_x", turnId: "t1" });
-      // "understands" = not rejected as malformed (it may legitimately map to
-      // a passthrough envelope; it must not come back null/throw).
       expect(event).not.toBeNull();
+      expect(JSON.stringify(event)).toContain(type);
+      expect(JSON.stringify(event)).toContain("sess_x");
     }
   });
 });

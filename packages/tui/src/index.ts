@@ -5704,23 +5704,32 @@ class ZCodeTui {
   private stop(): void {
     if (this.stopped) return;
     this.stopped = true;
-    try {
-      this.pendingSteerInterrupt = undefined;
-      this.turnAbortController?.abort();
-      for (const controller of this.steerAbortControllers) controller.abort();
-      this.steerAbortControllers.clear();
-      this.updateCheckAbortController?.abort();
-      if (this.turnTimer) clearInterval(this.turnTimer);
-      this.stopSessionTitleSpinner();
-      if (this.rewindEscapeTimer) clearTimeout(this.rewindEscapeTimer);
-      if (this.fullscreenWelcomeTransitionTimer) clearTimeout(this.fullscreenWelcomeTransitionTimer);
-      if (this.runtimeRefreshTimer) clearTimeout(this.runtimeRefreshTimer);
-      if (this.runtimePollTimer) clearTimeout(this.runtimePollTimer);
-      this.unsubscribeSession?.();
-      this.unsubscribeWorkflow?.();
-    } catch {
-      // Fallible cleanup must never skip terminal restoration (a throwing
-      // unsubscribe here used to leave the terminal in alt-screen).
+    // Each fallible step is isolated: one throwing cleanup must never skip
+    // the others (and above all, never skip ui.stop() below).
+    for (const cleanup of [
+      () => {
+        this.pendingSteerInterrupt = undefined;
+        this.turnAbortController?.abort();
+        for (const controller of this.steerAbortControllers) controller.abort();
+        this.steerAbortControllers.clear();
+        this.updateCheckAbortController?.abort();
+      },
+      () => {
+        if (this.turnTimer) clearInterval(this.turnTimer);
+        this.stopSessionTitleSpinner();
+        if (this.rewindEscapeTimer) clearTimeout(this.rewindEscapeTimer);
+        if (this.fullscreenWelcomeTransitionTimer) clearTimeout(this.fullscreenWelcomeTransitionTimer);
+        if (this.runtimeRefreshTimer) clearTimeout(this.runtimeRefreshTimer);
+        if (this.runtimePollTimer) clearTimeout(this.runtimePollTimer);
+      },
+      () => this.unsubscribeSession?.(),
+      () => this.unsubscribeWorkflow?.(),
+    ]) {
+      try {
+        cleanup();
+      } catch {
+        // Fallible cleanup must never prevent terminal restoration.
+      }
     }
     const elapsedMilliseconds = this.turnStartedAt === undefined
       ? this.turnElapsedMilliseconds

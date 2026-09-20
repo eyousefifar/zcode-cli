@@ -97,7 +97,7 @@ Test matrix: [docs/TESTING.md](docs/TESTING.md)
 
 ## How the packaging works
 
-`src/entry.ts` (binary) and `src/bin.js` (npm) are small shims that repair the
+`src/entry.ts` (binary) and `src/npm-entry.ts` (npm) are small shims that repair the
 bundle's environment assumptions, then load `vendor/zcode.cjs`:
 
 1. embed the builtin provider registry (`vendor/zcode-builtin.json`) and point
@@ -114,19 +114,37 @@ The bundle itself is unmodified.
 
 ## Known limitations
 
-- Interactive TUI is **experimental**: bundled from kingsword09's
-  [`@zcode/tui`](https://github.com/kingsword09/zcode-cli) (MIT). It boots,
-  renders and accepts input; if chat submission misbehaves, headless mode
-  (`zcode -p`) is the supported path.
 - Some flags in upstream `--help` are not actually parsed (`--allowed-tools`,
   `--max-turns`, ...). See [docs/OPTIONS.md](docs/OPTIONS.md).
 - Browser Use backend needs `playwright-core`, which is stubbed out.
 
+## Non-goals
+
+- **Windows binaries** — the engine's Windows story is the desktop app; the
+  npm entry runs under bun on Windows but has no compiled binary target.
+- **linux-musl** — bun cross-targets are glibc; Alpine needs the npm entry.
+- **Bundling Chrome for Browser Use** — headless Browser Use requires a
+  system Chrome/Chromium (`--browser-executable`).
+
 ## Credits
 
 - [kingsword09/zcode-cli](https://github.com/kingsword09/zcode-cli) — the
-  interactive TUI (`@zcode/tui`) is their MIT-licensed work; their project is
-  also a full-featured npm-distributed alternative with their own launcher.
+  interactive TUI (`packages/tui/`, forked at their commit `b8d8e95`) is their
+  MIT-licensed work, as is the sync tooling that extracts the engine bundle
+  (`vendor/`, Z.ai proprietary — see [LICENSE-NOTE](LICENSE-NOTE) and
+  [vendor/PROVENANCE.md](vendor/PROVENANCE.md)); their project is also a
+  full-featured npm-distributed alternative with their own launcher.
+- [earendil-works/pi](https://github.com/earendil-works/pi) — pi-tui, the
+  terminal rendering engine under the TUI.
+
+## Engineering docs
+
+- [docs/ASD-ST100.md](docs/ASD-ST100.md) — full system assessment and
+  remediation roadmap (release integrity, isolation, egress, agent-loop tests).
+- [docs/tui/](docs/tui/) — TUI research, architecture, parity matrix, testing
+  and the three-tier test suite description.
+- [docs/EGRESS.md](docs/EGRESS.md) — every network endpoint this
+  distribution can contact, with the enforcement story.
 
 ## Versioning
 
