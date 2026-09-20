@@ -5704,19 +5704,24 @@ class ZCodeTui {
   private stop(): void {
     if (this.stopped) return;
     this.stopped = true;
-    this.pendingSteerInterrupt = undefined;
-    this.turnAbortController?.abort();
-    for (const controller of this.steerAbortControllers) controller.abort();
-    this.steerAbortControllers.clear();
-    this.updateCheckAbortController?.abort();
-    if (this.turnTimer) clearInterval(this.turnTimer);
-    this.stopSessionTitleSpinner();
-    if (this.rewindEscapeTimer) clearTimeout(this.rewindEscapeTimer);
-    if (this.fullscreenWelcomeTransitionTimer) clearTimeout(this.fullscreenWelcomeTransitionTimer);
-    if (this.runtimeRefreshTimer) clearTimeout(this.runtimeRefreshTimer);
-    if (this.runtimePollTimer) clearTimeout(this.runtimePollTimer);
-    this.unsubscribeSession?.();
-    this.unsubscribeWorkflow?.();
+    try {
+      this.pendingSteerInterrupt = undefined;
+      this.turnAbortController?.abort();
+      for (const controller of this.steerAbortControllers) controller.abort();
+      this.steerAbortControllers.clear();
+      this.updateCheckAbortController?.abort();
+      if (this.turnTimer) clearInterval(this.turnTimer);
+      this.stopSessionTitleSpinner();
+      if (this.rewindEscapeTimer) clearTimeout(this.rewindEscapeTimer);
+      if (this.fullscreenWelcomeTransitionTimer) clearTimeout(this.fullscreenWelcomeTransitionTimer);
+      if (this.runtimeRefreshTimer) clearTimeout(this.runtimeRefreshTimer);
+      if (this.runtimePollTimer) clearTimeout(this.runtimePollTimer);
+      this.unsubscribeSession?.();
+      this.unsubscribeWorkflow?.();
+    } catch {
+      // Fallible cleanup must never skip terminal restoration (a throwing
+      // unsubscribe here used to leave the terminal in alt-screen).
+    }
     const elapsedMilliseconds = this.turnStartedAt === undefined
       ? this.turnElapsedMilliseconds
       : Math.max(0, performance.now() - this.turnStartedAt);

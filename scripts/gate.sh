@@ -13,6 +13,25 @@ step() { echo; echo "=== $1 ==="; }
 step "build (fork TUI + native + npm entry)"
 bash scripts/build.sh native npm || FAIL=1
 
+step "vendor integrity (vendor/SHA256SUMS must match the checked-in bundle)"
+( cd vendor && shasum -a 256 -c SHA256SUMS ) || FAIL=1
+
+# Network control (R1.4/D8): when the online opt-ins are off, force all
+# proxy-honoring traffic through a dead sink so any accidental real-API call
+# or telemetry upload fails loudly instead of passing silently. Loopback (the
+# mock model server) stays exempt via NO_PROXY.
+if [[ "${RUN_ONLINE:-0}" != "1" && "${RUN_PERF:-0}" != "1" ]]; then
+  export HTTP_PROXY="http://127.0.0.1:9"
+  export HTTPS_PROXY="http://127.0.0.1:9"
+  export ALL_PROXY="http://127.0.0.1:9"
+  export http_proxy="$HTTP_PROXY"
+  export https_proxy="$HTTPS_PROXY"
+  export all_proxy="$ALL_PROXY"
+  export NO_PROXY="127.0.0.1,localhost"
+  export no_proxy="$NO_PROXY"
+  echo "network control: proxy-honoring egress denied (dead sink 127.0.0.1:9), loopback exempt"
+fi
+
 step "tier 1: wrapper state-isolation + TUI logic tests (test/unit, test/tui-unit)"
 bun test test/unit/ || FAIL=1
 bun test test/tui-unit/ || FAIL=1

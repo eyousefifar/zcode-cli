@@ -10,7 +10,7 @@ to verify the bytes. See also `LICENSE-NOTE` (terms) and
 | File | Upstream | Introduced here |
 |---|---|---|
 | `zcode.cjs` | ZCode desktop app CLI engine, version **0.16.5** (Z.ai proprietary), in the patched form produced by [kingsword09/zcode-cli](https://github.com/kingsword09/zcode-cli)'s sync tooling | `09b6d14` |
-| `cli-config.cjs` | Same engine, same sync path (CLI config module) | `09b6d14` |
+| `cli-config.cjs` | Same engine, same sync path (CLI config module) | `f9f4bca` (moved into `vendor/` then) |
 | `zcode-builtin.json` | Same engine (builtin provider registry data) | `09b6d14` |
 | `cli-settings-default.json` | Same engine (default CLI settings document) | `09b6d14` |
 | `zcode-tui-index.js` | kingsword09/zcode-cli prebuilt TUI bundle (`packages/zcode-tui` dist) | `09b6d14` |

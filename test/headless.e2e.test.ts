@@ -160,33 +160,29 @@ describe("headless offline", () => {
     expect(body).toContain(marker);
   }, 60_000);
 
-  test("Workflow tool executes a real helper workflow offline (R1.2)", async () => {
-    // The model asks for the built-in Workflow tool with an inline,
-    // network-free script. The runtime must parse the script meta and run the
-    // body through its `node --eval` helper subprocess — replayed by our
-    // entry shim in a guarded child (the workflow sandbox nulls globalThis
-    // process, so the old in-process replay crashed after success).
+  test("Bash tool_use executes offline and the result round-trips (R3.1)", async () => {
+    // The model issues a registered, advertised tool call; the runtime must
+    // execute it (yolo mode) and feed the result back as a tool-role message.
+    // (The Workflow tool is NOT registered headless — "Tool not found" — so
+    // the helper-subprocess path is covered directly in
+    // test/unit/eval-replay.test.ts instead.)
     server.setScenario({
       kind: "tool-use",
-      toolName: "Workflow",
-      toolInput: {
-        name: "e2e-workflow",
-        script: 'export const meta = { name: "e2e-workflow" };\nlog("workflow running");\nreturn "WORKFLOW-TOOL-OK";\n',
-      },
-      followUpText: "WORKFLOW-TOOL-FOLLOWUP-OK",
+      toolName: "Bash",
+      toolInput: { command: "echo HEADLESS-TOOL-OK", description: "print the marker" },
+      followUpText: "HEADLESS-FOLLOWUP-OK",
     });
     try {
       const before = server.requests().length;
-      const r = await runBinary(sandbox, ["-p", "Run the workflow.", "--json"], { timeoutMs: 120_000 });
-      const combined = r.stdout + r.stderr;
-      if (r.exitCode !== 0) console.log("workflow run failed:", combined.slice(0, 3000));
+      const r = await runBinary(sandbox, ["-p", "Run the bash tool.", "--json"], { timeoutMs: 120_000 });
       expect(r.exitCode).toBe(0);
-      expect(combined).toContain("WORKFLOW-TOOL-FOLLOWUP-OK");
-      // The tool round-trip: ≥2 model requests; the follow-up carries the
-      // tool result content.
+      expect(r.stdout).toContain("HEADLESS-FOLLOWUP-OK");
       const requests = server.requests().slice(before);
       expect(requests.length).toBeGreaterThanOrEqual(2);
-      expect(JSON.stringify(requests.at(-1)?.body)).toContain("WORKFLOW-TOOL-OK");
+      const messages = ((requests.at(-1)?.body as any)?.messages ?? []) as Array<{ role: string; content?: string }>;
+      const toolMsgs = messages.filter((m) => m.role === "tool");
+      expect(toolMsgs.length).toBeGreaterThan(0);
+      expect(toolMsgs.map((m) => m.content ?? "").join(" ")).toContain("HEADLESS-TOOL-OK");
     } finally {
       server.setScenario({ kind: "success" });
     }
@@ -229,10 +225,17 @@ describe("headless offline", () => {
     try {
       const r = await runBinary(sandbox, ["-p", "Say the sentinel", "--json"], {
         extraEnv: {
+          // Both the standard AND the vendor's native proxy variables (the
+          // runtime strips the standard ones after capturing them and its own
+          // resolver reads ZCODE_*; covering both closes the blind spot where
+          // only one transport honors the proxy).
           HTTPS_PROXY: `http://127.0.0.1:${proxy.port}`,
           HTTP_PROXY: `http://127.0.0.1:${proxy.port}`,
           ALL_PROXY: `http://127.0.0.1:${proxy.port}`,
+          ZCODE_HTTP_PROXY: `http://127.0.0.1:${proxy.port}`,
+          ZCODE_HTTPS_PROXY: `http://127.0.0.1:${proxy.port}`,
           NO_PROXY: "127.0.0.1,localhost",
+          ZCODE_NO_PROXY: "127.0.0.1,localhost",
         },
       });
       expect(r.exitCode).toBe(0);
@@ -244,9 +247,31 @@ describe("headless offline", () => {
       const allowlist = ["zcode.z.ai:443"]; // builtin-provider refresh, see docs/EGRESS.md
       const undisclosed = seen.filter((h) => !allowlist.includes(h));
       expect(undisclosed).toEqual([]);
+      // Positive control: the probe must actually see traffic (a fresh sandbox
+      // triggers the documented startup refresh); an empty capture would make
+      // this test vacuous — it could mean "no egress" OR "proxy-ignoring
+      // egress". The dead-sink network control in gate.sh covers the latter.
+      expect(seen.length).toBeGreaterThan(0);
     } finally {
       proxy.stop(true);
     }
+  }, 90_000);
+
+  test("synthetic credentials decrypt through the vendor's real AES-GCM path (R1.3)", async () => {
+    // `logout` must DECRYPT the zai record: the synthetic fixture proves it
+    // matches the vendor's key derivation, enc:v1 prefix and encoding — a
+    // byte-off fixture fails here with "Credential decrypt failed".
+    await sandbox.installSyntheticCredentials();
+    const good = await runBinary(sandbox, ["logout"]);
+    expect(good.exitCode).toBe(0);
+    expect(good.stdout).toMatch(/[Ll]ogged out/);
+    // A wrong secret must fail the decrypt (the oracle is sensitive).
+    await sandbox.installSyntheticCredentials();
+    const bad = await runBinary(sandbox, ["logout"], {
+      extraEnv: { ZCODE_CREDENTIAL_SECRET: "definitely-not-the-test-secret" },
+    });
+    expect(bad.exitCode).toBe(1);
+    expect(bad.stderr).toContain("Credential decrypt failed");
   }, 90_000);
 
   test("--mode build/edit/yolo are accepted, plan is rejected", async () => {

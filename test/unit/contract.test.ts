@@ -44,8 +44,9 @@ describe("fork↔vendor contract", () => {
   test("event vocabulary: normalizer understands the vendor's session event types", async () => {
     const { normalizeEvent } = await import("../../packages/tui/src/events.ts");
     // Frozen as of vendor 0.16.5 — observed live via ZCODE_TUI_DEBUG_EVENTS
-    // during pty e2e runs. If the vendor renames/adds event types, update the
-    // fork's normalizer AND this list together.
+    // during pty e2e runs (incl. tool_use/permission flows: tool_call_scheduled,
+    // permission_requested, streaming_tool_ledger_updated). If the vendor
+    // renames/adds event types, update the fork's normalizer AND this list.
     const vendorEventTypes = [
       "turn_started",
       "turn_complete",
@@ -54,6 +55,11 @@ describe("fork↔vendor contract", () => {
       "model_streaming",
       "model_network_status",
       "session_title_updated",
+      "tool_call_scheduled",
+      "tool_call_started",
+      "tool_call_result",
+      "permission_requested",
+      "streaming_tool_ledger_updated",
     ];
     for (const type of vendorEventTypes) {
       const event = normalizeEvent({ type, sessionId: "sess_x", turnId: "t1" });

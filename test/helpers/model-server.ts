@@ -33,6 +33,13 @@ export type Scenario =
       toolName: string;
       toolInput: Record<string, unknown>;
       followUpText: string;
+      /**
+       * Serve the tool call only to requests that advertise the tool
+       * (default true — kills the title-generation race). Set false only for
+       * headless flows with no background requests; the Workflow tool is
+       * dynamically dispatched and absent from the advertised table.
+       */
+      requireAdvertised?: boolean;
     };
 
 export interface ModelServer {
@@ -211,8 +218,17 @@ export async function startModelServer(options: StartOptions = {}): Promise<Mode
       const s = scenario as any;
 
       if (kind === "tool-use") {
-        const first = !toolUseServed;
-        toolUseServed = true;
+        // Serve the tool call ONLY when the request actually advertises the
+        // tool. Background requests (e.g. the TUI's title generation) send
+        // tools: [] — the vendor discards tool calls from them, so handing
+        // the tool call to such a request would lose it nondeterministically
+        // (codex judge round 2, finding 3).
+        const advertised = s.requireAdvertised === false || (
+          Array.isArray(body?.tools)
+            && body.tools.some((t: any) => (t?.function?.name ?? t?.name) === s.toolName)
+        );
+        const first = !toolUseServed && advertised;
+        if (first) toolUseServed = true;
         return toolUseResponse(protocol, body.stream === true, s.toolName, s.toolInput, s.followUpText, first);
       }
       if (kind === "rate-limit") {

@@ -26,13 +26,24 @@ wraps that bundle so `zcode` is a normal command:
 
 ### Binary (macOS/Linux)
 
-Grab the artifact for your platform from
-[Releases](https://github.com/eyousefifar/zcode-cli/releases):
+Grab the artifacts for your platform **and the `SHA256SUMS` file** from
+[Releases](https://github.com/eyousefifar/zcode-cli/releases). Verify before
+you execute — an unverified binary is a stranger's binary:
 
 ```bash
-curl -fL https://github.com/eyousefifar/zcode-cli/releases/latest/download/zcode-darwin-arm64 -o /usr/local/bin/zcode
-chmod +x /usr/local/bin/zcode
+V=$(curl -fsSL https://api.github.com/repos/eyousefifar/zcode-cli/releases/latest | sed -n 's/.*"tag_name": *"v\([^"]*\)".*/\1/p')
+for f in zcode-darwin-arm64 zcode-darwin-x64 zcode-linux-x64 zcode-linux-arm64 SHA256SUMS; do
+  curl -fLO "https://github.com/eyousefifar/zcode-cli/releases/download/v${V}/${f}"
+done
+# macOS: `shasum -a 256 -c`; Linux: `sha256sum -c`
+shasum -a 256 -c SHA256SUMS || exit 1
+sudo cp zcode-darwin-arm64 /usr/local/bin/zcode   # pick your platform's file
+sudo chmod +x /usr/local/bin/zcode
 ```
+
+The release pipeline itself executes every target binary (native macOS, Intel
+macOS, Linux x64, Linux arm64 under qemu) and asserts its version matches the
+tag before anything is published — see `.github/workflows/release.yml`.
 
 ### npm (thin package — runs on bun)
 

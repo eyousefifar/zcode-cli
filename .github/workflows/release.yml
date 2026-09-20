@@ -65,10 +65,10 @@ jobs:
             smoke: native
           # Real Intel runner: bun's x64 build requires AVX, which Rosetta
           # (arm64 runners) does not emulate — the dry run proved it (SIGILL
-          # under Rosetta). Execution on genuine Intel macOS is the only
-          # honest smoke for this target.
+          # under Rosetta). macos-13 is retired (Dec 2025); macos-15-intel is
+          # the supported Intel image.
           - target: darwin-x64
-            os: macos-13
+            os: macos-15-intel
             smoke: native
           - target: linux-x64
             os: ubuntu-24.04
@@ -114,19 +114,30 @@ jobs:
             exit 1
           fi
 
+      - name: Digest the executed binary
+        # The digest travels WITH the artifact so the publish job can prove
+        # the file it publishes is byte-identical to the binary that was
+        # executed in the smoke step (artifact-swap defense).
+        run: |
+          cd dist
+          shasum -a 256 zcode-${{ matrix.target }} > "zcode-${{ matrix.target }}.sha256"
+
       - name: Upload target artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: zcode-${{ matrix.target }}
-          path: dist/zcode-${{ matrix.target }}
+          path: |
+            dist/zcode-${{ matrix.target }}
+            dist/zcode-${{ matrix.target }}.sha256
           retention-days: 7
           if-no-files-found: error
 
   publish:
-    name: Checksum & publish
+    name: Verify digests & publish
     needs: build
     runs-on: ubuntu-24.04
-    if: startsWith(github.ref, 'refs/tags/')
+    # Verification runs on EVERY pipeline execution (workflow_dispatch is a
+    # true end-to-end dry run); only the release upload below is tag-gated.
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
@@ -134,14 +145,18 @@ jobs:
           pattern: zcode-*
           merge-multiple: true
 
-      - name: Generate SHA256SUMS
+      - name: Verify build digests, then generate SHA256SUMS
         run: |
           cd dist
           chmod +x zcode-*
+          # Each binary must match the digest its build job recorded AFTER the
+          # smoke execution — a substituted artifact fails here.
+          shasum -a 256 -c zcode-darwin-arm64.sha256 zcode-darwin-x64.sha256 zcode-linux-x64.sha256 zcode-linux-arm64.sha256
           sha256sum zcode-darwin-arm64 zcode-darwin-x64 zcode-linux-x64 zcode-linux-arm64 > SHA256SUMS
           cat SHA256SUMS
 
       - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |

@@ -91,7 +91,33 @@ if (realProcess.argv[2] === "--input-type=module" && realProcess.argv[3] === "--
     [realProcess.execPath, EVAL_REPLAY_CHILD, ...realProcess.argv.slice(2)],
     { stdin: "inherit", stdout: "inherit", stderr: "inherit" },
   );
-  realProcess.exit(await child.exited);
+  // Supervise the child's whole lifetime: the vendor cancels helpers by
+  // killing THEIR immediate child (us) and awaits close — if we died without
+  // forwarding, the evaluator would survive holding our pipes and defeat the
+  // vendor's timeout. Forward, then escalate.
+  let escalated = false;
+  const forward = (signal: NodeJS.Signals) => {
+    try {
+      child.kill(signal);
+    } catch {
+      // already gone
+    }
+    if (!escalated) {
+      escalated = true;
+      setTimeout(() => {
+        try {
+          child.kill("SIGKILL");
+        } catch {
+          // already gone
+        }
+      }, 2_000).unref?.();
+    }
+  };
+  realProcess.once("SIGTERM", () => forward("SIGTERM"));
+  realProcess.once("SIGINT", () => forward("SIGINT"));
+  if (realProcess.platform !== "win32") realProcess.once("SIGHUP", () => forward("SIGHUP"));
+  const code = await child.exited;
+  realProcess.exit(code ?? 1);
 }
 
 // Pass 2 (the guarded child): normalize argv to the node eval layout —

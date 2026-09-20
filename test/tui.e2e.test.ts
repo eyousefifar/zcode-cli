@@ -138,40 +138,55 @@ describe("tui offline", () => {
   }, 60_000);
 });
 
-// Agent-loop tests (R3.1). FINDING (ASD-ST100 D22): the vendor's INTERACTIVE
-// runtime (the `zcode tui` path) drops model tool_use blocks — no tool
-// execution, no permission request, no tool events (verified via
-// ZCODE_TUI_DEBUG_EVENTS: model_request/turn events only) — while headless
-// `-p` executes the same tool call fine (covered in test/headless.e2e.test.ts).
-// These tests pin the CURRENT graceful behavior: the turn must still complete
-// through the follow-up response and exit cleanly. If the interactive runtime
-// ever grows a tool loop, the "not.toContain(TOOL_OUTPUT)" assertions below
-// fail — flip them to the real permission-dialog assertions then.
+// Agent-loop tests (R3.1): the model issues a real tool_use; the TUI must
+// raise the permission dialog (build mode + high-risk command), route the
+// decision back to the model, and execute only when allowed.
+//
+// Test-design constraints (learned the hard way — see ASD-ST100 D22/D23):
+//   - `echo …` is auto-allowed as a safe command (no dialog): use a write
+//     command such as `touch` to reach the permission flow.
+//   - The ZAI_BUSINESS_BASE_URL redirect used by the plain-text tests routes
+//     the session through the coding-plan business API, where the
+//     interactive tool loop does NOT run (D23). These tests must rely on the
+//     provider fixture's baseUrl only — no tuiEnv().
 describe("tui agent loop", () => {
-  const TOOL_OUTPUT = "PERM-TOOL-OK";
   const FOLLOW_UP = "PERM-FOLLOWUP-OK";
+  let markerSeq = 0;
 
-  function armBashScenario(server: ModelServer): void {
+  function armBashScenario(server: ModelServer, command: string): void {
     server.setScenario({
       kind: "tool-use",
       toolName: "Bash",
-      toolInput: { command: `echo ${TOOL_OUTPUT}`, description: "print the marker" },
+      toolInput: { command, description: "create the marker file" },
       followUpText: FOLLOW_UP,
     });
   }
 
-  test("tool_use completes the turn gracefully; permission dialog is NOT reachable (D22)", async () => {
-    armBashScenario(server);
+  async function workspaceFiles(): Promise<string[]> {
+    return Array.fromAsync(new Bun.Glob("*").scan({ cwd: sandbox.cwd }));
+  }
+
+  test("permission dialog: Allow once executes the tool and round-trips the result", async () => {
+    const TOOL_MARKER = `perm-allow-${++markerSeq}.txt`;
+    armBashScenario(server, `touch ${TOOL_MARKER}`);
     try {
       const tui = await startTui(sandbox, { args: ["tui"] });
       try {
         tui.type("Use the bash tool\r");
+        // The dialog must present the tool, the risk and the command.
+        await tui.waitForText("Permission", 30_000);
+        const dialog = tui.screenText();
+        expect(dialog).toContain("Bash");
+        expect(dialog).toContain("Allow once");
+        expect(dialog).toContain(TOOL_MARKER);
+        // Number shortcut 1 = "Allow once".
+        tui.type("1");
         await tui.waitForText(FOLLOW_UP, 90_000);
-        // D22 evidence: no tool execution (no output), no permission dialog.
-        expect(tui.screenText()).not.toContain(TOOL_OUTPUT);
-        expect(tui.screenText()).not.toContain("Allow once");
-        // The turn did complete with ≥2 model round-trips and the session lives.
-        expect(server.requests().length).toBeGreaterThanOrEqual(2);
+        // The tool actually ran in the sandbox workspace.
+        expect(await workspaceFiles()).toContain(TOOL_MARKER);
+        // The tool result reached the model in the follow-up request.
+        const last = server.requests().at(-1)!;
+        expect(JSON.stringify(last.body)).toContain(TOOL_MARKER);
         tui.type("/exit\r");
         const deadline = Date.now() + 20_000;
         while (Date.now() < deadline && tui.exitCode() === null) await Bun.sleep(50);
@@ -182,7 +197,54 @@ describe("tui agent loop", () => {
     } finally {
       server.setScenario({ kind: "success" });
     }
-  }, 150_000);
+  }, 180_000);
+
+  test("permission dialog: Deny skips the tool and reports back to the model", async () => {
+    const TOOL_MARKER = `perm-deny-${++markerSeq}.txt`;
+    armBashScenario(server, `touch ${TOOL_MARKER}`);
+    try {
+      const tui = await startTui(sandbox, { args: ["tui"] });
+      try {
+        tui.type("Use the bash tool\r");
+        await tui.waitForText("Permission", 30_000);
+        // Number shortcut 4 = "Deny".
+        tui.type("4");
+        await tui.waitForText(FOLLOW_UP, 90_000);
+        // The tool must NOT have run.
+        expect(await workspaceFiles()).not.toContain(TOOL_MARKER);
+        // The denial reached the model: the follow-up's tool-role message
+        // must carry the rejection (the command echo alone stays in history).
+        const last = server.requests().at(-1)!;
+        const messages = (last.body as { messages?: Array<{ role: string; content?: string }> }).messages ?? [];
+        const toolMsgs = messages.filter((m) => m.role === "tool");
+        expect(toolMsgs.length).toBeGreaterThan(0);
+        expect(toolMsgs.map((m) => m.content ?? "").join(" ")).toMatch(/deny|denied|permission/i);
+      } finally {
+        await tui.close();
+      }
+    } finally {
+      server.setScenario({ kind: "success" });
+    }
+  }, 180_000);
+
+  test("permission dialog: Esc cancels the request", async () => {
+    const TOOL_MARKER = `perm-esc-${++markerSeq}.txt`;
+    armBashScenario(server, `touch ${TOOL_MARKER}`);
+    try {
+      const tui = await startTui(sandbox, { args: ["tui"] });
+      try {
+        tui.type("Use the bash tool\r");
+        await tui.waitForText("Permission", 30_000);
+        tui.type("\u001b"); // Esc — cancel
+        await tui.waitForText(FOLLOW_UP, 90_000);
+        expect(await workspaceFiles()).not.toContain(TOOL_MARKER);
+      } finally {
+        await tui.close();
+      }
+    } finally {
+      server.setScenario({ kind: "success" });
+    }
+  }, 180_000);
 });
 
 // Command/keybinding scenarios (R3.2): the high-traffic TUI surfaces, driven
