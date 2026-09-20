@@ -130,6 +130,16 @@ violates or risks one of them:
 > and egress disclosed — then close the agent-loop test gap.
 
 ### R1 — P0/P1: "do not tag until done" (release integrity)
+
+**Judge loop status (2026-09-20):** grok round 3 verdict **SHIP** (flip-condition
+closed: sandbox proxy propagation makes the dead-sink real for sandboxed
+children); all codex round-2 punch-list items verified CLOSED by grok and
+codex's own residuals fixed (writeSync Buffer-overload write-all, escalation
+test tightened). Release pipeline proven end-to-end on dispatch
+35479361670: gate under network denial + all four targets executed
+(darwin-arm64, darwin-x64 on macos-15-intel, linux-x64, linux-arm64 qemu) +
+digest verification. Remaining tag-prep: bump the reported version
+(package.json + doctor e2e expectation) when the tag is cut.
 - [x] 1.1 Done: `.github/workflows/ci.yml` — full offline gate on macos-14, pinned bun 1.4.2 + action SHAs; green run 35474497560 (2026-09-19). (D1)
 - [x] 1.2 Fixed: helper replay re-executes the binary in a guarded child (the workflow sandbox nulls `globalThis.process`, so in-process replay crashed after success); argv normalized to the node eval layout; event loop drains instead of a forced exit. Real-helper e2e: mock `tool_use` → Workflow tool → helper subprocess (D3).
 - [x] 1.3 Synthetic credentials: sandbox mints AES-GCM `enc:v1` records under a fixed test secret (both credential paths written); `installCredentials` removed from all tests/scripts; tier 3 green locally. CI verification rides 1.1.

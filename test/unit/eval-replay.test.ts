@@ -71,9 +71,10 @@ describe("eval replay (guarded child)", () => {
     proc.kill("SIGTERM");
     const code = await proc.exited;
     const elapsed = Date.now() - startedAt;
-    // Escalation fires at ~2s: the child dies with 137, not by our SIGTERM.
+    // Escalation fires at ~2s: the child dies with 137 (SIGKILL), not by our
+    // ignored SIGTERM, and not by any graceful exit.
     expect(elapsed).toBeLessThan(10_000);
-    expect(code === 137 || code === 0).toBe(true);
+    expect(code).toBe(137);
   }, 30_000);
 
   test("stdin reaches the replayed module", async () => {

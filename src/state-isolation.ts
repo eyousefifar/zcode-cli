@@ -86,10 +86,12 @@ export function ensureCliSettingsFile(settingsPath: string, defaultsJson: string
   try {
     fd = openSync(tmp, "wx", 0o600);
     created = true; // only WE may unlink tmp now
-    // write-all: writeSync may accept fewer bytes than requested.
+    // write-all via the Buffer overload (for strings the third writeSync
+    // argument is a file POSITION, not an offset — grok round 3 probe).
+    const payload = Buffer.from(defaultsJson, "utf8");
     let offset = 0;
-    while (offset < defaultsJson.length) {
-      offset += writeSync(fd, defaultsJson, offset);
+    while (offset < payload.length) {
+      offset += writeSync(fd, payload, offset, payload.length - offset);
     }
     closeSync(fd);
     fd = undefined;
