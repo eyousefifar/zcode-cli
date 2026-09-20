@@ -179,8 +179,9 @@ describe("headless offline", () => {
       expect(r.stdout).toContain("HEADLESS-FOLLOWUP-OK");
       const requests = server.requests().slice(before);
       expect(requests.length).toBeGreaterThanOrEqual(2);
-      const messages = ((requests.at(-1)?.body as any)?.messages ?? []) as Array<{ role: string; content?: string }>;
-      const toolMsgs = messages.filter((m) => m.role === "tool");
+      const toolMsgs = requests.flatMap((r) =>
+        ((r.body as { messages?: Array<{ role: string; content?: string }> }).messages ?? [])
+      ).filter((m) => m.role === "tool");
       expect(toolMsgs.length).toBeGreaterThan(0);
       expect(toolMsgs.map((m) => m.content ?? "").join(" ")).toContain("HEADLESS-TOOL-OK");
     } finally {

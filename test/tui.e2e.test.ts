@@ -170,6 +170,7 @@ describe("tui agent loop", () => {
     const TOOL_MARKER = `perm-allow-${++markerSeq}.txt`;
     armBashScenario(server, `touch ${TOOL_MARKER}`);
     try {
+      const before = server.requests().length;
       const tui = await startTui(sandbox, { args: ["tui"] });
       try {
         tui.type("Use the bash tool\r");
@@ -184,10 +185,13 @@ describe("tui agent loop", () => {
         await tui.waitForText(FOLLOW_UP, 90_000);
         // The tool actually ran in the sandbox workspace.
         expect(await workspaceFiles()).toContain(TOOL_MARKER);
-        // The tool result reached the model in a tool-role message.
-        const last = server.requests().at(-1)!;
-        const messages = ((last.body as any)?.messages ?? []) as Array<{ role: string }>;
-        expect(messages.some((m) => m.role === "tool")).toBe(true);
+        // The tool result reached the model in a tool-role message. Search
+        // the whole request slice: a background (title) request may arrive
+        // after the follow-up and become the "last" one (CI race, 0.16.9 sync).
+        const requests = server.requests().slice(before);
+        const hasToolMsg = requests.some((r) =>
+          ((r.body as any)?.messages ?? []).some((m: any) => m.role === "tool"));
+        expect(hasToolMsg).toBe(true);
         tui.type("/exit\r");
         const deadline = Date.now() + 20_000;
         while (Date.now() < deadline && tui.exitCode() === null) await Bun.sleep(50);
@@ -204,6 +208,7 @@ describe("tui agent loop", () => {
     const TOOL_MARKER = `perm-deny-${++markerSeq}.txt`;
     armBashScenario(server, `touch ${TOOL_MARKER}`);
     try {
+      const before = server.requests().length;
       const tui = await startTui(sandbox, { args: ["tui"] });
       try {
         tui.type("Use the bash tool\r");
@@ -215,9 +220,10 @@ describe("tui agent loop", () => {
         expect(await workspaceFiles()).not.toContain(TOOL_MARKER);
         // The denial reached the model: the follow-up's tool-role message
         // must carry the rejection (the command echo alone stays in history).
-        const last = server.requests().at(-1)!;
-        const messages = (last.body as { messages?: Array<{ role: string; content?: string }> }).messages ?? [];
-        const toolMsgs = messages.filter((m) => m.role === "tool");
+        const requests = server.requests().slice(before);
+        const toolMsgs = requests.flatMap((r) =>
+          ((r.body as { messages?: Array<{ role: string; content?: string }> }).messages ?? [])
+        ).filter((m) => m.role === "tool");
         expect(toolMsgs.length).toBeGreaterThan(0);
         expect(toolMsgs.map((m) => m.content ?? "").join(" ")).toMatch(/deny|denied|permission/i);
       } finally {
@@ -232,6 +238,7 @@ describe("tui agent loop", () => {
     const TOOL_MARKER = `perm-esc-${++markerSeq}.txt`;
     armBashScenario(server, `touch ${TOOL_MARKER}`);
     try {
+      const before = server.requests().length;
       const tui = await startTui(sandbox, { args: ["tui"] });
       try {
         tui.type("Use the bash tool\r");
@@ -240,9 +247,10 @@ describe("tui agent loop", () => {
         await tui.waitForText(FOLLOW_UP, 90_000);
         expect(await workspaceFiles()).not.toContain(TOOL_MARKER);
         // The cancellation reached the model as the tool result.
-        const last = server.requests().at(-1)!;
-        const messages = ((last.body as any)?.messages ?? []) as Array<{ role: string; content?: string }>;
-        const toolMsgs = messages.filter((m) => m.role === "tool");
+        const requests = server.requests().slice(before);
+        const toolMsgs = requests.flatMap((r) =>
+          ((r.body as { messages?: Array<{ role: string; content?: string }> }).messages ?? [])
+        ).filter((m) => m.role === "tool");
         expect(toolMsgs.length).toBeGreaterThan(0);
         expect(toolMsgs.map((m) => m.content ?? "").join(" ")).toMatch(/cancel|deny|denied/i);
       } finally {
